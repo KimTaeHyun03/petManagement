@@ -4,7 +4,9 @@
       "WebFetch(domain:cheatsheetseries.owasp.org)",
       "WebFetch(domain:owasp.org)",
       "WebFetch(domain:pages.nist.gov)",
-      "WebFetch(domain:auth0.com)"
+      "WebFetch(domain:auth0.com)",
+      "Bash(npx tsc *)",
+      "Bash(npm install *)"
     ]
   }
 }

@@ -107,6 +107,8 @@
 - JWT(Access) + Refresh Token 인증
 - 로그아웃 / 비밀번호 변경
 
+> ⚠ **현 구현 상태(2026-05-18)** — 1차 구현은 **Access-only(httpOnly 쿠키, 기본 2h)** 로 진행되어 본 4.1의 "Refresh Token 인증" 결정값과 어긋난다. 운영 전환 전 Refresh Rotation 도입 + Access TTL 단축이 필요. 또한 비밀번호 해시는 **Argon2id** (research_taehyun.md §1) — 본 절의 "bcrypt" 표기는 후속에 갱신 예정. 상세 트래커: `TODO.md`.
+
 > ※ 집주소 입력은 **제외** — 동물병원 찾기 기능을 1차 범위에서 제외하므로 수집할 이유가 없음 (불필요한 개인정보 최소화)
 
 ### 4.2 반려동물 등록  *(담당: 김태현)*
