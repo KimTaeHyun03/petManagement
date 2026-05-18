@@ -46,7 +46,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **OCR 자동 기록이 핵심 입력 경로** — 영수증(→ 예방접종 자동 기록) / 성분표(→ 위험 성분 + 펫 알러지 매칭). 자동 저장이 아니라 **사용자 확정 후 저장** 흐름으로 오인식 위험 완화 (`PLAN.md` 4.4).
 - **AI 진단 안 함** — 챗봇 시스템 프롬프트에 "진단·처방 X, 일반 정보 제공만" 명시. 면책 고지("응급 시 동물병원 방문 권장")를 UI 푸터·검색 결과·챗봇 응답에 상시 노출.
-- **챗봇은 RAG식** — Gemini API + 펫 단위 DB 컨텍스트(타임라인 + 프로필 + 알러지) 주입. 응답 시점 컨텍스트는 `ChatLog.context_snapshot_json`에 감사용으로 보관. 펫 단위 격리로 다른 사용자 데이터 누출 차단 (`PLAN.md` 4.8).
+- **챗봇은 RAG식** — OpenAI API + 펫 단위 DB 컨텍스트(타임라인 + 프로필 + 알러지) 주입. 응답 시점 컨텍스트는 `ChatLog.context_snapshot_json`에 감사용으로 보관. 펫 단위 격리로 다른 사용자 데이터 누출 차단 (`PLAN.md` 4.8).
 - **위험도 점수 엔진은 MVP 범위에서 제외** — 단순 규칙 알림(체중 ±10% 급변, 접종 D-7/D-1/D-day, 광견병 미접종 강조)만 유지 (`PLAN.md` 6절). 증상 입력도 1차 범위에서 제외 (`function.md` 김기연).
 - **펫 단위 격리** — 모든 기록(체중·OCR·접종·챗봇)은 `pet_id`로 분리 저장하고, 모든 API에서 사용자-펫 권한 검증을 강제. 한 계정에서 다묘/다견 동시 관리가 핵심 사용 시나리오.
 - **개인정보 최소화** — 집주소 수집·동물병원 찾기 기능은 1차 범위 제외.
@@ -69,13 +69,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
         │   ├ FoodService          (위험음식 검색·성분표 알러지 매칭)
         │   ├ VaccinationService   (예방접종 일정·이력·영수증 자동 기록)
         │   ├ TimelineService      (이벤트 통합·대시보드)
-        │   └ ChatbotService       (Gemini + DB 컨텍스트 RAG)
+        │   └ ChatbotService       (OpenAI + DB 컨텍스트 RAG)
         │
         ├─ 알림 처리기 ─► 체중 급변 / 다음 접종일 도래 → Push
         │
         └─ 외부 연동
             ├ OCR 엔진             (선정 예정 — Google Vision / Tesseract / Naver Clova OCR)
-            └ Gemini API           (챗봇)
+            └ OpenAI API           (챗봇)
 
 [AWS RDS]
     ├ 운영 DB (User / Pet / WeightRecord / VaccinationRecord / ReceiptRecord / IngredientScan / ChatLog)
@@ -95,7 +95,7 @@ User 1—N Pet 1—N { WeightRecord, VaccinationRecord, ReceiptRecord, Ingredien
 - **Frontend**: React 19 + TypeScript, CSS-in-JS. ⚠ CSS 파일은 `.tsx`에 합치지 말고 **별도 파일로 분리** (스타일 책임 분리).
 - **Backend**: Node.js + Express (REST API).
 - **Database**: AWS RDS (PostgreSQL / MySQL — RDS 비용·운영 편의로 결정 예정).
-- **외부 API**: OCR 엔진(선정 예정), Google Gemini API (챗봇).
+- **외부 API**: OCR 엔진(선정 예정), OpenAI API (챗봇).
 - **배포**: 프론트 S3(또는 EC2) / 백엔드 EC2 / DB RDS / 이미지 저장소 S3.
 
 현재 빌드·테스트 도구는 `client/`에만 들어있다 (`vite`, `eslint`, `typescript`). `server/`는 아직 `package.json`이 없으므로 통상의 build/lint/test 명령은 적용 안 된다.

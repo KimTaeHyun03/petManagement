@@ -23,7 +23,7 @@
 
 - **종**: 강아지, 고양이 (가장 많이 키우는 두 종에 우선 집중)
 - **사용자**: 반려동물 보호자 (1인 1계정, 다수 펫)
-- **플랫폼**: 웹 (PC/모바일 반응형) — Gemini 호출 고려
+- **플랫폼**: 웹 (PC/모바일 반응형) — OpenAI 호출 고려
 
 ---
 
@@ -46,14 +46,14 @@
      │     ├─ FoodService          (위험음식 검색·성분표 알러지 매칭)
      │     ├─ VaccinationService   (예방접종 일정·이력·영수증 자동 기록)
      │     ├─ TimelineService      (이벤트 통합·대시보드)
-     │     └─ ChatbotService       (Gemini + DB 컨텍스트 RAG)
+     │     └─ ChatbotService       (OpenAI + DB 컨텍스트 RAG)
      │
      ├──► [알림 처리기]
      │     └─ 체중 급변 / 다음 접종일 도래 → 푸시
      │
      └──► [외부 연동]
            ├─ OCR 엔진             (이미지 텍스트 추출)
-           ├─ Gemini API           (챗봇 응답 생성)
+           ├─ OpenAI API           (챗봇 응답 생성)
            └─ Push           (알림 채널)
 
 [Database]
@@ -61,41 +61,26 @@
      └─ 마스터 DB (DangerFood, Vaccine, StandardWeight)
 ```
 
-### 3.2 핵심 흐름 — "OCR 기반 자동 기록"
+### 3.2 사진 업로드 → OCR 자동 분기 *(담당: 장윤서)*
 
 ```
-사용자가 사진 업로드 (영수증 또는 성분표)
+[사진 업로드] — 영수증 또는 성분표
         │
         ▼
-[OCRService: 이미지 → 텍스트]
+   [OCRService: 이미지 → 텍스트]
         │
         ▼
-[문서 분류: 영수증 vs 성분표]
+   [문서 분류: 영수증 vs 성분표]
+   ├─ 영수증 키워드: "결제", "원", "동물병원", 접종 항목명
+   └─ 성분표 키워드: "원재료", "성분", "조단백질"
         │
-        ├─ 성분표 ─► [FoodService]
-        │             ├─ 위험음식 DB 매칭 (ASPCA 23개)
-        │             ├─ 펫 알러지 정보 매칭
-        │             └─ 위험 성분 즉시 경고
+        │   (사용자 확인 UI에서 분류 재확정 가능)
         │
-        └─ 영수증 ─► [VaccinationService]
-                      ├─ 결제일·접종 항목·주사 종류 추출
-                      └─ VaccinationRecord 자동 저장 → 다음 접종일 알림 예약
-        │
-        ▼
-[TimelineService: 이벤트로 기록]
-        │
-        ▼
-[ChatbotService: 컨텍스트에 포함]
+        ├─ 성분표 ─► 4.5 위험 성분 · 알러지 매칭
+        └─ 영수증 ─► 4.6 예방접종 자동 기록
 ```
 
-### 3.3 수동 입력 vs OCR 자동화 (정본 결정)
-
-| 항목 | 수동 입력 방식 | **채택: OCR 자동화** |
-|---|---|---|
-| 입력 부담 | 보호자가 매번 항목별 폼 입력 | 사진 한 장 업로드 |
-| 정확도 | 사람 오타·누락 가능 | OCR 후 사용자 확정 단계로 보정 |
-| 기록 누락 | 귀찮아서 미입력 | 영수증·성분표만 찍어도 자동 누적 |
-| 타임라인 풍부도 | 입력 데이터만 표시 | OCR 이벤트도 타임라인에 자동 반영 |
+원본 이미지·텍스트는 `IngredientScan` 또는 `ReceiptRecord`에 저장. **자동 저장이 아닌 사용자 확정 후 저장** — OCR 오인식으로 인한 잘못된 의료 기록 방지.
 
 ---
 
@@ -152,19 +137,21 @@
 **오류 처리**:
 - 자동 저장이 아닌 "사용자 확정 후 저장" 흐름으로 의료 데이터 오인식 위험 완화
 
-### 4.5 위험 음식 검색 & 성분표 알러지 매칭  *(담당: 장윤서)*
+### 4.5 성분표 위험 성분 · 알러지 매칭  *(담당: 장윤서)*
 
-`research/research_yunseo.md`에 정리된 ASPCA 자료(초콜릿·자일리톨·양파·포도·자몽·마카다미아 등 23개)를 `DangerFood` 마스터 시드 데이터로 활용. OCR로 추출한 성분 텍스트를 두 가지 기준으로 매칭한다.
+성분표로 분류된 OCR 결과를 두 갈래로 매칭한 뒤 **화면 즉시 경고**를 띄운다 (푸시 알림 채널은 사용하지 않음 — §6).
 
 ```
 OCR로 추출한 성분 텍스트
    │
-   ├─ DangerFood DB 키워드 매칭
+   ├─ DangerFood DB 키워드 매칭 (ASPCA 23개)
    │   └─ 일치 시 "이 사료에 [초콜릿] 포함 — 모든 강아지에 위험" 경고
    │
-   └─ Pet.allergies 매칭(펫 알러지)
+   └─ Pet.allergies 매칭 (해당 펫 알러지)
        └─ 일치 시 "이 펫의 [닭고기] 알러지에 해당" 맞춤 경고
 ```
+
+매칭 결과는 `IngredientScan.matched_foods_json` / `matched_allergies_json` 에 저장되어 타임라인·챗봇 컨텍스트에서 재참조된다.
 
 **경고 카드 예시**
 ```
@@ -189,7 +176,7 @@ OCR로 추출한 성분 텍스트
 
 **입력 경로**:
 1. **수동 입력** — 보호자가 백신 종류·날짜 직접 선택
-2. **영수증 OCR 자동 기록** (plan3.md 핵심) — 동물병원 영수증 업로드 → OCRService가 결제일·접종 항목·주사 종류를 추출해 `VaccinationRecord` 후보 생성 → 사용자 확정 후 저장
+2. **영수증 OCR 자동 기록** — 동물병원 영수증 업로드
 
 **알림 로직** (RESEARCH "3. 예방접종" 인용):
 - 접종 완료 입력 → 다음 권장일 자동 계산 → 알림 예약
@@ -213,13 +200,10 @@ OCR로 추출한 성분 텍스트
 3/25  💉 영수증 OCR: 광견병 접종 자동 기록
 ```
 
-- 카테고리 필터(체중/음식/접종/OCR), 날짜 범위 필터
-- 시간 근접 이벤트 시각적 연결 (예: 성분표 경고 → 며칠 후 체중 감소)
-- 대시보드 상단 카드: 다음 접종 일정, 최근 체중, 최근 OCR 경고 요약
 
 ### 4.8 챗봇  *(담당: 김태현)*
 
-**구현 방식**: Gemini API + DB 컨텍스트 (RAG식)
+**구현 방식**: OpenAI API + DB 컨텍스트 (RAG식)
 
 **입력 흐름**:
 ```
@@ -231,7 +215,7 @@ OCR로 추출한 성분 텍스트
    ├─ Pet 프로필(종·품종·체중·알러지) 조회
    ├─ 시스템 프롬프트 + 컨텍스트 + 사용자 질문 조립
    ▼
-Gemini API 호출 → 자연어 응답
+OpenAI API 호출 → 자연어 응답
    │
    ▼
 ChatLog 저장 + 사용자에게 노출
@@ -251,19 +235,19 @@ ChatLog 저장 + 사용자에게 노출
 ## 5. 데이터베이스 설계 (ERD 개요)
 
 ```
-User (id, email, pw_hash, created_at)
+User(사용자 정보) (id, email, pw_hash, created_at)
   │
-  └── Pet (id, user_id, name, species, breed, birth, gender, neutered, allergies_json)
+  └── Pet(펫 정보) (id, user_id, name, species, breed, birth, gender, neutered, allergies_json)
          │
-         ├── WeightRecord       (id, pet_id, weight, recorded_at, memo)
-         ├── VaccinationRecord  (id, pet_id, vaccine_id, dose_no, vaccinated_at, source: manual|ocr)
-         ├── ReceiptRecord      (id, pet_id, image_url, extracted_text, parsed_json, paid_at, created_at)
-         ├── IngredientScan    (id, pet_id, image_url, extracted_text, matched_foods_json, matched_allergies_json, scanned_at)
-         └── ChatLog            (id, user_id, pet_id, role, message, context_snapshot_json, created_at)
+         ├── WeightRecord(몸무게)       (id, pet_id, weight, recorded_at, memo)
+         ├── VaccinationRecord(예방접종)  (id, pet_id, vaccine_id, dose_no, vaccinated_at, source: manual|ocr)
+         ├── ReceiptRecord(먹은 음식)      (id, pet_id, image_url, extracted_text, parsed_json, paid_at, created_at)
+         ├── IngredientScan(영수증 이미지)    (id, pet_id, image_url, extracted_text, matched_foods_json, matched_allergies_json, scanned_at)
+         └── ChatLog(채팅내역)            (id, user_id, pet_id, role, message, context_snapshot_json, created_at)
 
-DangerFood     (id, name, aspca_ref, toxic_compound, symptoms, threshold_per_kg, severity, source_url) ※ 마스터
-Vaccine        (id, species, name, recommend_weeks, dose_total, mandatory, severity)                    ※ 마스터
-StandardWeight (id, species, breed, age_range, min_kg, max_kg)                                          ※ 마스터
+DangerFood(위험음식)     (id, name, aspca_ref, toxic_compound, symptoms, threshold_per_kg, severity, source_url) ※ 마스터
+Vaccine(백신)        (id, species, name, recommend_weeks, dose_total, mandatory, severity)                    ※ 마스터
+StandardWeight(강아지별 정상 체중) (id, species, breed, age_range, min_kg, max_kg)                                          ※ 마스터
 ```
 
 **제약/인덱스 메모**:
@@ -287,8 +271,6 @@ StandardWeight (id, species, breed, age_range, min_kg, max_kg)                  
 | 미접종 의무 백신 | 광견병 등 권장일 초과 | Push (강조 톤) |
 | 성분표 위험 성분 감지 | OCR 매칭 결과 위험 항목 ≥1 | 화면 즉시 경고 (알림 채널 X) |
 
-**튜닝 방안**:
-- 임계값(체중 ±10%, 접종 D-day 등)은 환경변수/DB 설정값으로 외부화 → 코드 수정 없이 조정
 
 ---
 
@@ -302,7 +284,7 @@ StandardWeight (id, species, breed, age_range, min_kg, max_kg)                  
 | 광견병 법적 의무 | 농림축산검역본부 (가축전염병예방법) | 환경부 / 지자체 고시 |
 | 표준 체중표 | KASA, AVMA | 사료사 공개 데이터 (Royal Canin, Hill's) — 보조 |
 | OCR 엔진 | (선정 예정 — Google Vision / Tesseract / Naver Clova OCR 비교 후 결정) | — |
-| 챗봇 응답 생성 | Google **Gemini API** | 컨텍스트는 자체 DB에서만 주입 |
+| 챗봇 응답 생성 | **OpenAI API** | 컨텍스트는 자체 DB에서만 주입 |
 
 ### 7.1 의료 자료 정확성 검증 절차
 
@@ -311,7 +293,7 @@ StandardWeight (id, species, breed, age_range, min_kg, max_kg)                  
 1. **1차 출처 우선** — 학회·정부 기관 자료를 먼저 채택, 블로그·요약 글은 인용 금지
 2. **2개 이상 교차 검증** — 위험 음식·백신 항목은 1차/2차 소스 모두에서 일치하는 것만 시드 데이터에 등재
 3. **수의사 검수 (가능 시)** — 발표 전 1회 도메인 전문가 리뷰
-4. **Gemini 응답은 의료 결정 근거로 단독 사용 금지** — 챗봇 응답에 "AI 추정" 라벨 + 1차 소스 참고 안내 함께 노출
+4. **OpenAI 응답은 의료 결정 근거로 단독 사용 금지** — 챗봇 응답에 "AI 추정" 라벨 + 1차 소스 참고 안내 함께 노출
 5. **면책 고지** — UI 푸터·검색 결과·챗봇 응답에 "본 정보는 참고용이며 응급 시 동물병원 방문 권장" 문구 상시 노출
 6. **OCR 결과 사용자 확정 단계** — 자동 저장이 아닌 사용자 확정 후 저장 (오인식으로 인한 잘못된 의료 기록 방지)
 
@@ -331,13 +313,14 @@ StandardWeight (id, species, breed, age_range, min_kg, max_kg)                  
    │     ├─ 최근 OCR 경고
    │     └─ 통합 타임라인
    │
+   ├─ [체중 입력]
+   │
    ├─ [OCR 업로드]
    │     ├─ 성분표 결과 → 위험 성분 & 알러지 매칭
    │     └─ 영수증 결과 → 접종 자동 기록 (사용자 확정)
    │
    ├─ [예방접종 관리]
-   ├─ [챗봇]
-   └─ [마이페이지]
+   └─ [챗봇]
 ```
 
 ---
@@ -348,7 +331,7 @@ StandardWeight (id, species, breed, age_range, min_kg, max_kg)                  
 |---|---|
 | 응답시간 | 일반 API 300ms 이내, OCR 5초 이내, 챗봇 응답 10초 이내 |
 | 보안 | JWT 인증, HTTPS, 비밀번호 해시(bcrypt), 펫 격리 권한 검증 |
-| 가용성 | Gemini·OCR 장애 시 캐시·폴백 메시지 |
+| 가용성 | OpenAI·OCR 장애 시 캐시·폴백 메시지 |
 | 언어 | 한국어 단일 (다국어 미지원) |
 
 ---
@@ -363,11 +346,11 @@ StandardWeight (id, species, breed, age_range, min_kg, max_kg)                  
 - Node.js (Express 기반 REST API)
 
 **Database**
-- AWS RDS (관계형, PostgreSQL 또는 MySQL 중 RDS 비용·운영 편의로 결정)
+- AWS RDS (관계형, PostgreSQL)
 
 **외부 API**
 - OCR 엔진 (선정 예정)
-- Google Gemini API (챗봇)
+- OpenAI API (챗봇)
 
 **배포**
 - React 빌드 → S3 정적 업로드 (또는 EC2로 한번에)
@@ -388,22 +371,5 @@ StandardWeight (id, species, breed, age_range, min_kg, max_kg)                  
 | 5. 테스트 | OCR 정확도 검증, 챗봇 컨텍스트 격리 검증 | 9~10주차 |
 | 6. 배포 | S3/EC2/RDS 배포 | 12주차 |
 | 7. 운영 | 알림·OCR·챗봇 캐시 모니터링 | 운영 단계 |
-
----
-
-## 12. 다음 단계 (개발 페이즈로 넘어가기 전 확인)
-
-| # | 항목 | 담당 / 시점 |
-|---|---|---|
-| 1 | 기술 스택 확정 | ✅ 10절 명시 완료 |
-| 2 | ERD 상세화 (제약조건·인덱스) | 자료조사 직후 |
-| 3 | API 명세서(REST) 작성 | 기능 확정 후 초안 작성 |
-| 4 | OCR 엔진 선정 (정확도·비용 비교) | 자료조사 분담자 |
-| 5 | 성분표/영수증 문서 분류 규칙 초안 | OCR 담당자 |
-| 6 | 위험 음식·백신 시드 데이터 1차 출처 검증 | 자료조사 분담자 |
-| 7 | Gemini 프롬프트 템플릿 초안 (챗봇용) | 챗봇 담당자 |
-| 8 | 화면 와이어프레임 (Figma) | 모든 기능 구현 후 디자인 단계 |
-
-> 📌 주차별 일정과 역할 분담은 **TODO.md** 참조 (회의 후 작성 예정)
 
 ---

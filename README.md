@@ -45,7 +45,16 @@
 | 백엔드 | Node.js (Express) |
 | 데이터베이스 | AWS RDS |
 | 배포 | AWS S3 or EC2 (프론트) + EC2 (백엔드) |
-| 외부 API | Google Gemini (위험음식 보조 검색) |
+| 외부 API | OpenAi API (챗봇) |
 
+---
 
+## 참고
+각자 사용자 회원가입 하고 로그인 해서 테스트 하기
+email/pw
+김태현 : test@test.com/test1234@@
+        test1@test.com/test1234@@
+장윤서 : test2@test.com/test1234@@
+김기연 : test3@test.com/test1234@@
+김찬영 : test4@test.com/test1234@@
 
