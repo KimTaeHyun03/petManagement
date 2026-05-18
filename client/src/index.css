@@ -1,0 +1,14 @@
+/* Vite 데모 스타일은 App.css의 테스트 콘솔과 충돌해서 걷어냈다.
+   여기엔 전역 reset/타이포만 둔다. */
+
+:root {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  color-scheme: light dark;
+}
+
+html, body { margin: 0; padding: 0; min-height: 100vh; }
+
+#root { min-height: 100vh; }
+
+h1, h2, h3, p { margin: 0; }

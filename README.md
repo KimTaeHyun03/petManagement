@@ -16,6 +16,7 @@
 | **`PLAN.md`** | 시스템 설계, 화면 구성, DB 구조, 기능별 상세 명세 | 구현하다 막힐 때 참조 |
 | **`RESEARCH.md`** | 왜 이 기능을 만드는지 배경 조사 | 처음에 프로젝트 이해할 때 |
 | **`TODO.md`** | 6주 일정 초안 + 주차별 할 일 | 회의에서 확정한 뒤 활용 |
+| **`/research`** | 자료조사 내용 | 자료조사 |
 
 ---
 
@@ -44,7 +45,16 @@
 | 백엔드 | Node.js (Express) |
 | 데이터베이스 | AWS RDS |
 | 배포 | AWS S3 or EC2 (프론트) + EC2 (백엔드) |
-| 외부 API | Google Gemini (위험음식 보조 검색) |
+| 외부 API | OpenAi API (챗봇) |
 
+---
 
+## 참고
+각자 사용자 회원가입 하고 로그인 해서 테스트 하기
+email/pw
+김태현 : test@test.com/test1234@@
+        test1@test.com/test1234@@
+장윤서 : test2@test.com/test1234@@
+김기연 : test3@test.com/test1234@@
+김찬영 : test4@test.com/test1234@@
 
