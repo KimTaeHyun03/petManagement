@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, errorMessage, type AuthUser, type Pet } from './api'
+import OcrPanel from './OcrPanel'
 import './App.css'
 
 type Screen = 'auth' | 'pets'
@@ -165,6 +166,8 @@ function PetsPanel() {
         <h2>반려동물 등록</h2>
         <PetForm onCreated={reload} />
       </section>
+
+      <OcrPanel pets={pets} />
 
       <section className="card">
         <h2>내 반려동물 ({pets.length})</h2>
