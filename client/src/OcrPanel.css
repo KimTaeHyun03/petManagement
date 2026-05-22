@@ -1,0 +1,231 @@
+.ocr-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ocr-select-row select {
+  flex: 1;
+  min-width: 140px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.drop-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 10px;
+  padding: 32px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: #fafafa;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.drop-zone input[type='file'] {
+  display: none;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 8px;
+  margin: 12px auto 0;
+  display: block;
+  border: 1px solid #e5e7eb;
+}
+
+.scan-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 10px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.scan-btn:hover:not(:disabled) { background: #1d4ed8; }
+.scan-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* 결과 카드 */
+.result-card {
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.doc-badge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.doc-badge.ingredient { background: #dbeafe; color: #1e40af; }
+.doc-badge.receipt    { background: #d1fae5; color: #065f46; }
+.doc-badge.unknown    { background: #f3f4f6; color: #6b7280; }
+
+.result-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alert-block {
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.alert-block.danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.alert-block.allergy {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.alert-block.safe {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.alert-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.alert-block.danger  .alert-title { color: #b91c1c; }
+.alert-block.allergy .alert-title { color: #c2410c; }
+.alert-block.safe    .alert-title { color: #166534; }
+
+.food-item {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.severity-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.severity-badge.high   { background: #fca5a5; color: #7f1d1d; }
+.severity-badge.medium { background: #fde68a; color: #78350f; }
+.severity-badge.low    { background: #d1fae5; color: #065f46; }
+
+.symptoms-text {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 2px;
+  margin-left: 2px;
+}
+
+.allergy-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.allergy-chip {
+  background: #ffedd5;
+  color: #9a3412;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.extracted-toggle {
+  font-size: 12px;
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.extracted-text {
+  font-size: 12px;
+  color: #374151;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: #9ca3af;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 10px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.confirm-btn:hover:not(:disabled) { background: #15803d; }
+.confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.saved-notice {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}

@@ -29,4 +29,8 @@ export const env = {
   smtpUser: process.env.SMTP_USER ?? '',
   smtpPass: process.env.SMTP_PASS ?? '',
   smtpFrom: process.env.SMTP_FROM ?? '',
+
+  // Naver CLOVA OCR (General 도메인 petocr)
+  clovaOcrInvokeUrl: required('CLOVA_OCR_INVOKE_URL'),
+  clovaOcrSecret: required('CLOVA_OCR_SECRET'),
 };
