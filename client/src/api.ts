@@ -49,6 +49,77 @@ export interface Pet {
   createdAt: string
 }
 
+export interface Vaccine {
+  id: number
+  species: 'dog' | 'cat' | 'both'
+  name: string
+  recommendWeeks: number | null
+  doseTotal: number
+  intervalWeeks: number | null
+  boosterWeeks: number | null
+  mandatory: boolean
+  severity: 'high' | 'low'
+}
+
+export interface VaccinationRecord {
+  id: string
+  petId: string
+  vaccineId: number
+  vaccineName: string
+  vaccineMandatory: boolean
+  vaccineSeverity: 'high' | 'low'
+  doseNo: number
+  doseTotal: number
+  vaccinatedAt: string
+  nextDueAt: string | null
+  daysUntilNext: number | null
+  source: 'manual' | 'ocr'
+  memo: string | null
+  createdAt: string
+}
+
+export interface MatchedFood {
+  id: string
+  name: string
+  severity: 'high' | 'medium' | 'low'
+  symptoms: string | null
+}
+
+export interface ScanResult {
+  docType: 'ingredient' | 'receipt' | 'unknown'
+  extractedText: string
+  matches: {
+    dangerFoods: MatchedFood[]
+    allergies: string[]
+  } | null
+  disclaimer: string
+}
+
+export interface IngredientScan {
+  id: string
+  petId: string
+  extractedText: string
+  matchedFoods: MatchedFood[]
+  matchedAllergies: string[]
+  scannedAt: string
+  disclaimer?: string
+}
+
+// multipart 전송용 — Content-Type 헤더를 브라우저가 자동 설정하도록 headers 제외
+async function upload<T>(path: string, body: FormData): Promise<T> {
+  const res = await fetch(path, { method: 'POST', credentials: 'include', body })
+  const text = await res.text()
+  const data = text ? JSON.parse(text) : null
+  if (!res.ok) {
+    const err: ApiError = {
+      status: res.status,
+      code: (data && (data.error as string)) || 'unknown_error',
+    }
+    throw err
+  }
+  return data as T
+}
+
 export const api = {
   register: (email: string, password: string) =>
     request<AuthUser>('/api/auth/register', {
@@ -81,6 +152,43 @@ export const api = {
     allergies?: string[]
   }) =>
     request<Pet>('/api/pets', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  listVaccines: (species: 'dog' | 'cat') =>
+    request<Vaccine[]>(`/api/vaccines?species=${species}`),
+
+  listVaccinations: (petId: string) =>
+    request<VaccinationRecord[]>(`/api/pets/${petId}/vaccinations`),
+
+  createVaccination: (
+    petId: string,
+    input: { vaccineId: number; doseNo: number; vaccinatedAt: string; memo?: string },
+  ) =>
+    request<VaccinationRecord>(`/api/pets/${petId}/vaccinations`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  deleteVaccination: (petId: string, id: string) =>
+    request<null>(`/api/pets/${petId}/vaccinations/${id}`, { method: 'DELETE' }),
+
+  // OCR 스캔 — 이미지 업로드 후 분류·매칭 결과 반환 (저장 X)
+  scanOcr: (petId: string, file: File) => {
+    const form = new FormData()
+    form.append('image', file)
+    return upload<ScanResult>(`/api/ocr/scan?petId=${petId}`, form)
+  },
+
+  // 스캔 결과 확정 저장
+  confirmScan: (input: {
+    petId: string
+    extractedText: string
+    matchedFoodsJson: MatchedFood[]
+    matchedAllergiesJson: string[]
+  }) =>
+    request<IngredientScan>('/api/ingredient-scans/confirm', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
