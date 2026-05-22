@@ -49,6 +49,35 @@ export interface Pet {
   createdAt: string
 }
 
+export interface Vaccine {
+  id: number
+  species: 'dog' | 'cat' | 'both'
+  name: string
+  recommendWeeks: number | null
+  doseTotal: number
+  intervalWeeks: number | null
+  boosterWeeks: number | null
+  mandatory: boolean
+  severity: 'high' | 'low'
+}
+
+export interface VaccinationRecord {
+  id: string
+  petId: string
+  vaccineId: number
+  vaccineName: string
+  vaccineMandatory: boolean
+  vaccineSeverity: 'high' | 'low'
+  doseNo: number
+  doseTotal: number
+  vaccinatedAt: string
+  nextDueAt: string | null
+  daysUntilNext: number | null
+  source: 'manual' | 'ocr'
+  memo: string | null
+  createdAt: string
+}
+
 export const api = {
   register: (email: string, password: string) =>
     request<AuthUser>('/api/auth/register', {
@@ -84,6 +113,24 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+
+  listVaccines: (species: 'dog' | 'cat') =>
+    request<Vaccine[]>(`/api/vaccines?species=${species}`),
+
+  listVaccinations: (petId: string) =>
+    request<VaccinationRecord[]>(`/api/pets/${petId}/vaccinations`),
+
+  createVaccination: (
+    petId: string,
+    input: { vaccineId: number; doseNo: number; vaccinatedAt: string; memo?: string },
+  ) =>
+    request<VaccinationRecord>(`/api/pets/${petId}/vaccinations`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  deleteVaccination: (petId: string, id: string) =>
+    request<null>(`/api/pets/${petId}/vaccinations/${id}`, { method: 'DELETE' }),
 }
 
 // 사용자 친화적 에러 메시지 매핑

@@ -22,4 +22,11 @@ export const env = {
   // dev/테스트 편의용 — Pwned Passwords 검사 우회.
   // 운영에서 실수로 켜지지 않도록 prod에서는 무조건 false로 강제.
   skipPwnedCheck: !isProd && process.env.SKIP_PWNED_CHECK === 'true',
+
+  // 이메일 알림 (SMTP) — 미설정 시 알림 발송 생략
+  smtpHost: process.env.SMTP_HOST ?? '',
+  smtpPort: Number(process.env.SMTP_PORT ?? 587),
+  smtpUser: process.env.SMTP_USER ?? '',
+  smtpPass: process.env.SMTP_PASS ?? '',
+  smtpFrom: process.env.SMTP_FROM ?? '',
 };

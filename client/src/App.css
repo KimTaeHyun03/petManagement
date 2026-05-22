@@ -105,6 +105,7 @@ body {
   border-radius: 6px;
   font-size: 14px;
   background: #fff;
+  color: #1f2328;
 }
 
 .form input:focus,
@@ -187,6 +188,16 @@ button:disabled {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 12px;
+  transition: border-color 0.15s;
+}
+
+.pet-item:hover {
+  border-color: #93c5fd;
+}
+
+.pet-item.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
 }
 
 .badge {
