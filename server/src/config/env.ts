@@ -22,4 +22,7 @@ export const env = {
   // dev/테스트 편의용 — Pwned Passwords 검사 우회.
   // 운영에서 실수로 켜지지 않도록 prod에서는 무조건 false로 강제.
   skipPwnedCheck: !isProd && process.env.SKIP_PWNED_CHECK === 'true',
+  // Naver CLOVA OCR (General 도메인 petocr)
+  clovaOcrInvokeUrl: required('CLOVA_OCR_INVOKE_URL'),
+  clovaOcrSecret: required('CLOVA_OCR_SECRET'),
 };
