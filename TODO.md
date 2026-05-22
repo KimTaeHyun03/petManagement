@@ -37,15 +37,8 @@
 - [x] **반려동물 등록** — `POST /api/pets` + `GET /api/pets` 구현. `requireAuth`로 인증 강제, `user_id` 필터로 펫 격리.
   - ERD 컬럼명 그대로 (`allergies_json` jsonb 등). `current_weight`는 ERD에 없어 제외 — 초기 체중 입력은 WeightRecord(김기연) 도입 후 연동.
 - [ ] **(후속) `PATCH /api/pets/:id` / `DELETE /api/pets/:id`** — 수정·삭제 + `requirePetOwnership` 미들웨어 (research §3.4)
-- [ ] **챗봇** — `/api/chat` OpenAI + 펫 컨텍스트 RAG, `ChatLog` 테이블
+- [ ] **챗봇** — `/api/chat` openai api + 펫 컨텍스트 RAG, `ChatLog` 테이블
 
 ---
 
-## 참고
-각자 사용자 회원가입 하고 로그인 해서 테스트 하기
-email/pw
-김태현 : test@test.com/test1234@@
-        test1@test.com/test1234@@
-장윤서 : test2@test.com/test1234@@
-김기연 : test3@test.com/test1234@@
-김찬영 : test4@test.com/test1234@@
+
