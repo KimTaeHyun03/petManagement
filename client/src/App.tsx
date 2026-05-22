@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, errorMessage, type AuthUser, type Pet } from './api'
+import VaccinationsPanel from './VaccinationsPanel'
 import OcrPanel from './OcrPanel'
 import './App.css'
 
@@ -144,6 +145,7 @@ function PetsPanel() {
   const [pets, setPets] = useState<Pet[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedPetId, setSelectedPetId] = useState<string | null>(null)
 
   async function reload() {
     setLoading(true)
@@ -159,6 +161,8 @@ function PetsPanel() {
   }
 
   useEffect(() => { reload() }, [])
+
+  const selectedPet = pets.find((p) => p.id === selectedPetId) ?? null
 
   return (
     <div className="pets-layout">
@@ -176,7 +180,12 @@ function PetsPanel() {
         {!loading && pets.length === 0 && <p className="muted">아직 등록된 반려동물이 없습니다.</p>}
         <ul className="pet-list">
           {pets.map((p) => (
-            <li key={p.id} className="pet-item">
+            <li
+              key={p.id}
+              className={`pet-item${selectedPetId === p.id ? ' selected' : ''}`}
+              onClick={() => setSelectedPetId(selectedPetId === p.id ? null : p.id)}
+              style={{ cursor: 'pointer' }}
+            >
               <strong>{p.name}</strong>
               <span className="badge">{p.species === 'dog' ? '🐶 강아지' : '🐱 고양이'}</span>
               {p.breed && <span className="muted"> · {p.breed}</span>}
@@ -191,6 +200,14 @@ function PetsPanel() {
             </li>
           ))}
         </ul>
+
+        {selectedPet && (
+          <VaccinationsPanel
+            petId={selectedPet.id}
+            petName={selectedPet.name}
+            species={selectedPet.species}
+          />
+        )}
       </section>
     </div>
   )
