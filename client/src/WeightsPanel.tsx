@@ -123,6 +123,7 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
     if (!confirm('이 체중 기록을 삭제할까요?')) return
     try {
       await api.deleteWeight(petId, id)
+      setLastResult(null)
       await reload()
       onChanged?.()
     } catch (err) {
