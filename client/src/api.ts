@@ -88,6 +88,8 @@ export interface MatchedFood {
 export interface ScanResult {
   docType: 'ingredient' | 'receipt' | 'unknown'
   extractedText: string
+  /** OCR 텍스트의 "제품명" 라벨에서 자동 추출한 값. 없으면 null. */
+  productName: string | null
   matches: {
     dangerFoods: MatchedFood[]
     allergies: string[]
@@ -101,6 +103,7 @@ export interface IngredientScan {
   extractedText: string
   matchedFoods: MatchedFood[]
   matchedAllergies: string[]
+  productName: string | null
   scannedAt: string
   disclaimer?: string
 }
@@ -158,6 +161,8 @@ export type TimelineEvent =
       matchedFoods: MatchedFood[]
       matchedAllergies: string[]
       extractedTextPreview: string
+      /** OCR 첫 줄에서 추출한 제품명 후보 — 없으면 null */
+      productName: string | null
     }
 
 export interface TimelinePage {
@@ -247,6 +252,7 @@ export const api = {
     extractedText: string
     matchedFoodsJson: MatchedFood[]
     matchedAllergiesJson: string[]
+    productName?: string | null
   }) =>
     request<IngredientScan>('/api/ingredient-scans/confirm', {
       method: 'POST',

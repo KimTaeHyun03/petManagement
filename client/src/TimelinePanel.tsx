@@ -125,15 +125,17 @@ function renderEvent(ev: TimelineEvent) {
       return (
         <>
           <span className="timeline-icon">📷</span>
-          <span className="timeline-title">성분표 OCR</span>
+          <span className="timeline-title">
+            성분표 OCR{ev.productName && ` — ${ev.productName}`}
+          </span>
           {ev.matchedFoods.length > 0 && (
             <span className="timeline-badge danger">
-              위험 성분 {ev.matchedFoods.length}건
+              위험 성분: {summarizeNames(ev.matchedFoods.map((f) => f.name))}
             </span>
           )}
           {ev.matchedAllergies.length > 0 && (
             <span className="timeline-badge allergy">
-              알러지 {ev.matchedAllergies.length}건
+              알러지: {summarizeNames(ev.matchedAllergies)}
             </span>
           )}
           {ev.matchedFoods.length === 0 && ev.matchedAllergies.length === 0 && (
@@ -142,6 +144,12 @@ function renderEvent(ev: TimelineEvent) {
         </>
       )
   }
+}
+
+// 매칭된 성분/알러지 이름 목록 요약 — 3개까지 나열, 그 이상은 "외 N개"
+function summarizeNames(names: string[]): string {
+  if (names.length <= 3) return names.join(', ')
+  return `${names.slice(0, 3).join(', ')} 외 ${names.length - 3}개`
 }
 
 function formatLocal(iso: string): string {

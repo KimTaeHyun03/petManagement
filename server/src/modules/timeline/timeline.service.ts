@@ -1,4 +1,5 @@
 import { HttpError } from '../../middleware/error.js';
+import { deriveProductName } from '../ocr/ocr.service.js';
 import type { TimelineQuery } from './timeline.schema.js';
 import { isPetOwner, loadTimeline, type TimelineRow } from './timeline.repo.js';
 
@@ -40,6 +41,8 @@ export type TimelineEvent =
       matchedFoods: Array<{ id: string; name: string; severity: string; symptoms: string | null }>;
       matchedAllergies: string[];
       extractedTextPreview: string;
+      /** OCR 텍스트 첫 줄에서 추출한 제품명 후보 (성분표 상단에 보통 위치). 없거나 길면 null. */
+      productName: string | null;
     };
 
 export interface TimelinePage {
@@ -78,7 +81,10 @@ function toEvent(row: TimelineRow): TimelineEvent {
         nextDueAt: (p['nextDueAt'] as string | null) ?? null,
         memo: (p['memo'] as string | null) ?? null,
       };
-    case 'ingredient_scan':
+    case 'ingredient_scan': {
+      const preview = String(p['extractedTextPreview'] ?? '');
+      // 저장된 product_name이 우선. NULL이면 (마이그레이션 이전 스캔) 텍스트에서 추출 시도.
+      const storedName = (p['productName'] as string | null) ?? null;
       return {
         ...base,
         type: 'ingredient_scan',
@@ -90,8 +96,10 @@ function toEvent(row: TimelineRow): TimelineEvent {
             symptoms: string | null;
           }>) ?? [],
         matchedAllergies: (p['matchedAllergies'] as string[]) ?? [],
-        extractedTextPreview: String(p['extractedTextPreview'] ?? ''),
+        extractedTextPreview: preview,
+        productName: storedName ?? deriveProductName(preview),
       };
+    }
   }
 }
 
