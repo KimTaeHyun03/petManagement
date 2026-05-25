@@ -9,7 +9,7 @@ interface Props {
   refreshKey?: number
 }
 
-const PAGE_SIZE = 30
+const PAGE_SIZE = 10
 
 export default function TimelinePanel({ petId, petName, refreshKey = 0 }: Props) {
   const [events, setEvents] = useState<TimelineEvent[]>([])
