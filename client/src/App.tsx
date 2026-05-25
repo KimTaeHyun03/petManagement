@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { api, errorMessage, type AuthUser, type Pet } from './api'
 import VaccinationsPanel from './VaccinationsPanel'
 import OcrPanel from './OcrPanel'
+import WeightsPanel from './WeightsPanel'
+import TimelinePanel from './TimelinePanel'
 import './App.css'
 
 type Screen = 'auth' | 'pets'
@@ -146,6 +148,9 @@ function PetsPanel() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null)
+  // 형제 패널 간 mutation 알림용 — 값이 바뀌면 TimelinePanel이 reload 한다.
+  const [timelineVersion, setTimelineVersion] = useState(0)
+  const bumpTimeline = () => setTimelineVersion((v) => v + 1)
 
   async function reload() {
     setLoading(true)
@@ -171,7 +176,7 @@ function PetsPanel() {
         <PetForm onCreated={reload} />
       </section>
 
-      <OcrPanel pets={pets} />
+      <OcrPanel pets={pets} onChanged={bumpTimeline} />
 
       <section className="card">
         <h2>내 반려동물 ({pets.length})</h2>
@@ -202,11 +207,24 @@ function PetsPanel() {
         </ul>
 
         {selectedPet && (
-          <VaccinationsPanel
-            petId={selectedPet.id}
-            petName={selectedPet.name}
-            species={selectedPet.species}
-          />
+          <>
+            <WeightsPanel
+              petId={selectedPet.id}
+              petName={selectedPet.name}
+              onChanged={bumpTimeline}
+            />
+            <VaccinationsPanel
+              petId={selectedPet.id}
+              petName={selectedPet.name}
+              species={selectedPet.species}
+              onChanged={bumpTimeline}
+            />
+            <TimelinePanel
+              petId={selectedPet.id}
+              petName={selectedPet.name}
+              refreshKey={timelineVersion}
+            />
+          </>
         )}
       </section>
     </div>
