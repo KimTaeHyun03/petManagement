@@ -28,6 +28,7 @@ export interface PublicScan {
   extractedText:        string;
   matchedFoods:         MatchedFood[];
   matchedAllergies:     string[];
+  productName:          string | null;
   scannedAt:            string;
 }
 
@@ -115,6 +116,7 @@ function toPublic(row: IngredientScanRow): PublicScan {
     extractedText:    row.extracted_text,
     matchedFoods:     row.matched_foods_json as MatchedFood[],
     matchedAllergies: row.matched_allergies_json as string[],
+    productName:      row.product_name,
     scannedAt:        row.scanned_at.toISOString(),
   };
 }

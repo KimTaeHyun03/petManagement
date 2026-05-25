@@ -84,7 +84,8 @@ export async function loadTimeline(
         jsonb_build_object(
           'matchedFoods',         s.matched_foods_json,
           'matchedAllergies',     s.matched_allergies_json,
-          'extractedTextPreview', LEFT(s.extracted_text, 120)
+          'extractedTextPreview', LEFT(s.extracted_text, 120),
+          'productName',          s.product_name
         ) AS payload
       FROM ingredient_scans s
       WHERE s.pet_id = $1

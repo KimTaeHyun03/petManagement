@@ -26,6 +26,7 @@ export default function OcrPanel({ pets, onChanged }: Props) {
   const [confirming, setConfirming] = useState(false)
   const [saved, setSaved]       = useState(false)
   const [error, setError]       = useState<string | null>(null)
+  const [productName, setProductName] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   function handleFile(f: File) {
@@ -34,6 +35,7 @@ export default function OcrPanel({ pets, onChanged }: Props) {
     setSaved(false)
     setError(null)
     setShowText(false)
+    setProductName('')
     setPreview(URL.createObjectURL(f))
   }
 
@@ -58,6 +60,7 @@ export default function OcrPanel({ pets, onChanged }: Props) {
     try {
       const res = await api.scanOcr(petId, file)
       setResult(res)
+      setProductName(res.productName ?? '')
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -75,6 +78,7 @@ export default function OcrPanel({ pets, onChanged }: Props) {
         extractedText:        result.extractedText,
         matchedFoodsJson:     result.matches?.dangerFoods ?? [],
         matchedAllergiesJson: result.matches?.allergies ?? [],
+        productName:          productName.trim() || null,
       })
       setSaved(true)
       onChanged?.()
@@ -165,6 +169,20 @@ export default function OcrPanel({ pets, onChanged }: Props) {
                 <div className="alert-title" style={{ color: '#374151' }}>문서 유형을 인식하지 못했어요</div>
                 <div style={{ fontSize: 13, color: '#6b7280' }}>성분표 또는 영수증 이미지를 올려주세요.</div>
               </div>
+            )}
+
+            {result.docType === 'ingredient' && (
+              <label className="product-name-field">
+                <span>제품명</span>
+                <input
+                  type="text"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  placeholder={result.productName ? '' : 'OCR에서 제품명을 못 찾았어요. 직접 입력하세요.'}
+                  maxLength={120}
+                  disabled={saved}
+                />
+              </label>
             )}
 
             {result.docType === 'ingredient' && result.matches && (
