@@ -1,0 +1,166 @@
+.weight-panel {
+  margin-top: 1.5rem;
+}
+
+.weight-panel h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.weight-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.weight-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.weight-form input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.weight-form button {
+  align-self: flex-start;
+  padding: 0.4rem 1rem;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.weight-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.weight-result {
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #e5e7eb;
+}
+
+.weight-result.normal {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.weight-result.over {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.weight-result.under {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.weight-result.unknown {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.weight-surge {
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed currentColor;
+  color: #b91c1c;
+}
+
+.weight-chart {
+  margin: 0.8rem 0 1rem;
+  background: #fafbfc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.weight-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.weight-line {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 1.6;
+}
+
+.weight-dot {
+  fill: #2563eb;
+}
+
+.weight-axis {
+  font-size: 10px;
+  fill: #9ca3af;
+}
+
+.weight-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.weight-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.weight-value {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.weight-meta {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+}
+
+.weight-delete {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
+.weight-delete:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.weight-empty {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}

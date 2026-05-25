@@ -4,9 +4,11 @@ import './OcrPanel.css'
 
 interface Props {
   pets: Pet[]
+  /** confirmScan 저장 후 호출 — 부모가 타임라인 같은 형제 패널을 reload하기 위한 신호. */
+  onChanged?: () => void
 }
 
-export default function OcrPanel({ pets }: Props) {
+export default function OcrPanel({ pets, onChanged }: Props) {
   const [petId, setPetId]       = useState<string>(pets[0]?.id ?? '')
 
   // pets가 뒤늦게 로드될 때 petId가 빈 값이면 첫 번째 펫으로 초기화
@@ -75,6 +77,7 @@ export default function OcrPanel({ pets }: Props) {
         matchedAllergiesJson: result.matches?.allergies ?? [],
       })
       setSaved(true)
+      onChanged?.()
     } catch (err) {
       setError(errorMessage(err))
     } finally {

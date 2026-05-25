@@ -105,6 +105,66 @@ export interface IngredientScan {
   disclaimer?: string
 }
 
+export interface WeightRecord {
+  id: string
+  petId: string
+  weight: number
+  recordedAt: string
+  memo: string | null
+  createdAt: string
+}
+
+export type WeightJudgement = 'normal' | 'over' | 'under' | 'unknown'
+
+export interface CreateWeightResponse {
+  record: WeightRecord
+  judgement: WeightJudgement
+  surge: boolean
+  deltaRatio: number | null
+}
+
+// 통합 타임라인 — discriminated union (서버 PLAN §4.7)
+export type TimelineEvent =
+  | {
+      type: 'weight'
+      id: string
+      petId: string
+      occurredAt: string
+      weight: number
+      memo: string | null
+      surge: boolean
+      deltaRatio: number | null
+    }
+  | {
+      type: 'vaccination'
+      id: string
+      petId: string
+      occurredAt: string
+      vaccineId: number
+      vaccineName: string
+      mandatory: boolean
+      severity: 'high' | 'low'
+      doseNo: number
+      doseTotal: number
+      source: 'manual' | 'ocr'
+      nextDueAt: string | null
+      memo: string | null
+    }
+  | {
+      type: 'ingredient_scan'
+      id: string
+      petId: string
+      occurredAt: string
+      matchedFoods: MatchedFood[]
+      matchedAllergies: string[]
+      extractedTextPreview: string
+    }
+
+export interface TimelinePage {
+  events: TimelineEvent[]
+  nextBefore: string | null
+}
+
 // multipart 전송용 — Content-Type 헤더를 브라우저가 자동 설정하도록 headers 제외
 async function upload<T>(path: string, body: FormData): Promise<T> {
   const res = await fetch(path, { method: 'POST', credentials: 'include', body })
@@ -192,6 +252,29 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+
+  listWeights: (petId: string) =>
+    request<WeightRecord[]>(`/api/pets/${petId}/weights`),
+
+  createWeight: (
+    petId: string,
+    input: { weight: number; recordedAt?: string; memo?: string },
+  ) =>
+    request<CreateWeightResponse>(`/api/pets/${petId}/weights`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  deleteWeight: (petId: string, id: string) =>
+    request<null>(`/api/pets/${petId}/weights/${id}`, { method: 'DELETE' }),
+
+  getTimeline: (petId: string, params?: { limit?: number; before?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.before) qs.set('before', params.before)
+    const s = qs.toString()
+    return request<TimelinePage>(`/api/pets/${petId}/timeline${s ? `?${s}` : ''}`)
+  },
 }
 
 // 사용자 친화적 에러 메시지 매핑

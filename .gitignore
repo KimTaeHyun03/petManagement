@@ -1,3 +1,21 @@
-./claude
+# Claude Code 로컬 설정 (팀원과 공유 X — 머신마다 다름)
+.claude/
 
+# 환경 변수 — 루트에 실수로 떨어져도 막히도록 방어적으로 추가
+.env
+.env.*
+!.env.example
+
+# OS / 에디터 잡파일
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# 의존성·빌드 산출물 (혹시 루트에 생기면)
+node_modules/
+dist/
+
+# 사용자 메모
 plan2.md
