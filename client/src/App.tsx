@@ -144,6 +144,7 @@ function AuthPanel({ onAuthenticated }: { onAuthenticated: (u: AuthUser) => void
 }
 
 function PetsPanel() {
+  const [view, setView] = useState<'list' | 'register'>('list')
   const [pets, setPets] = useState<Pet[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -169,17 +170,52 @@ function PetsPanel() {
 
   const selectedPet = pets.find((p) => p.id === selectedPetId) ?? null
 
+  if (view === 'register') {
+    return (
+      <PetRegisterPage
+        onBack={() => setView('list')}
+        onCreated={async () => {
+          await reload()
+          setView('list')
+        }}
+      />
+    )
+  }
+
+  const navItems = [
+    { id: 'pet-list', label: '내 반려동물', petOnly: false },
+    { id: 'ocr-scan', label: '성분표 스캔', petOnly: false },
+    { id: 'pet-weights', label: '체중 관리', petOnly: true },
+    { id: 'pet-vaccinations', label: '예방접종 관리', petOnly: true },
+    { id: 'pet-timeline', label: '통합 타임라인', petOnly: true },
+  ]
+
   return (
-    <div className="pets-layout">
-      <section className="card">
-        <h2>반려동물 등록</h2>
-        <PetForm onCreated={reload} />
-      </section>
+    <>
+      <nav className="section-nav">
+        {navItems.map((item) => {
+          const disabled = item.petOnly && !selectedPet
+          return (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className={`section-nav-item${disabled ? ' disabled' : ''}`}
+              onClick={(e) => { if (disabled) e.preventDefault() }}
+              aria-disabled={disabled}
+            >
+              {item.label}
+            </a>
+          )
+        })}
+      </nav>
 
-      <OcrPanel pets={pets} onChanged={bumpTimeline} />
-
-      <section className="card">
-        <h2>내 반려동물 ({pets.length})</h2>
+      <div className="pets-layout">
+      <div className="pets-main">
+      <section id="pet-list" className="card">
+        <div className="card-header">
+          <h2>내 반려동물 ({pets.length})</h2>
+          <button type="button" onClick={() => setView('register')}>+ 반려동물 등록</button>
+        </div>
         {loading && <p>로딩 중…</p>}
         {error && <p className="error">{error}</p>}
         {!loading && pets.length === 0 && <p className="muted">아직 등록된 반려동물이 없습니다.</p>}
@@ -206,28 +242,59 @@ function PetsPanel() {
           ))}
         </ul>
 
-        {selectedPet && (
-          <>
+      </section>
+
+      <div id="ocr-scan">
+        <OcrPanel pets={pets} onChanged={bumpTimeline} />
+      </div>
+
+      {selectedPet && (
+        <>
+          <section id="pet-weights" className="card">
             <WeightsPanel
               petId={selectedPet.id}
               petName={selectedPet.name}
               onChanged={bumpTimeline}
             />
+          </section>
+          <section id="pet-vaccinations" className="card">
             <VaccinationsPanel
               petId={selectedPet.id}
               petName={selectedPet.name}
               species={selectedPet.species}
               onChanged={bumpTimeline}
             />
+          </section>
+          <section id="pet-timeline" className="card timeline-card">
             <TimelinePanel
               petId={selectedPet.id}
               petName={selectedPet.name}
               refreshKey={timelineVersion}
             />
-          </>
-        )}
-      </section>
-    </div>
+          </section>
+        </>
+      )}
+      </div>
+      </div>
+    </>
+  )
+}
+
+function PetRegisterPage({
+  onBack,
+  onCreated,
+}: {
+  onBack: () => void
+  onCreated: () => void
+}) {
+  return (
+    <section className="card register-page">
+      <div className="card-header">
+        <button type="button" onClick={onBack}>← 돌아가기</button>
+        <h2>반려동물 등록</h2>
+      </div>
+      <PetForm onCreated={onCreated} />
+    </section>
   )
 }
 
