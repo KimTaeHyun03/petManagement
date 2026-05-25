@@ -85,8 +85,38 @@
   color: #b91c1c;
 }
 
+.weight-range {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin: 0.5rem 0 0;
+  padding: 0.2rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+.weight-range button {
+  padding: 0.3rem 0.7rem;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.weight-range button:hover {
+  color: #374151;
+}
+
+.weight-range button.active {
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
 .weight-chart {
-  margin: 0.8rem 0 1rem;
+  margin: 0.5rem 0 1rem;
   background: #fafbfc;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -163,4 +193,34 @@
 .weight-empty {
   color: #9ca3af;
   font-size: 0.9rem;
+}
+
+.weight-pager {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.weight-pager button {
+  min-width: 2rem;
+  padding: 0.3rem 0.55rem;
+  background: #fff;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.weight-pager button:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.weight-pager button.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
 }

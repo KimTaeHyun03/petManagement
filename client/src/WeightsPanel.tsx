@@ -21,6 +21,14 @@ interface LastResult {
   weight: number
 }
 
+type RangeKey = 'week' | 'month' | '3month'
+const RANGE_DAYS: Record<RangeKey, number> = { week: 7, month: 30, '3month': 90 }
+const RANGE_LABELS: Record<RangeKey, string> = {
+  week: '1주',
+  month: '1개월',
+  '3month': '3개월',
+}
+
 export default function WeightsPanel({ petId, petName, onChanged }: Props) {
   const [records, setRecords] = useState<WeightRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,6 +41,19 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [lastResult, setLastResult] = useState<LastResult | null>(null)
+
+  // 차트 표시 범위
+  const [range, setRange] = useState<RangeKey>('week')
+
+  // 기록 목록 페이지네이션
+  const PAGE_SIZE = 5
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(records.length / PAGE_SIZE))
+  // records 변동으로 현재 page가 범위를 벗어나면 보정
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
+  const pagedRecords = records.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   async function reload() {
     setLoading(true)
@@ -49,6 +70,7 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
   useEffect(() => {
     reload()
     setLastResult(null)
+    setPage(1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [petId])
 
@@ -87,6 +109,7 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
       setWeight('')
       setRecordedAtLocal(nowLocalForInput())
       setMemo('')
+      setPage(1)
       await reload()
       onChanged?.()
     } catch (err) {
@@ -100,6 +123,7 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
     if (!confirm('이 체중 기록을 삭제할까요?')) return
     try {
       await api.deleteWeight(petId, id)
+      setLastResult(null)
       await reload()
       onChanged?.()
     } catch (err) {
@@ -159,9 +183,23 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
 
       {!loading && records.length > 0 && (
         <>
-          <WeightChart records={records} />
+          <div className="weight-range" role="tablist" aria-label="기간 선택">
+            {(Object.keys(RANGE_DAYS) as RangeKey[]).map((r) => (
+              <button
+                key={r}
+                type="button"
+                role="tab"
+                aria-selected={range === r}
+                className={range === r ? 'active' : ''}
+                onClick={() => setRange(r)}
+              >
+                {RANGE_LABELS[r]}
+              </button>
+            ))}
+          </div>
+          <WeightChart records={records} days={RANGE_DAYS[range]} />
           <ul className="weight-list">
-            {records.map((rec) => (
+            {pagedRecords.map((rec) => (
               <li key={rec.id} className="weight-item">
                 <div className="weight-item-info">
                   <div className="weight-value">{rec.weight} kg</div>
@@ -181,6 +219,21 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
               </li>
             ))}
           </ul>
+          {totalPages > 1 && (
+            <nav className="weight-pager" aria-label="기록 페이지">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  aria-current={p === page ? 'page' : undefined}
+                  className={p === page ? 'active' : ''}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+              ))}
+            </nav>
+          )}
         </>
       )}
 
@@ -218,57 +271,111 @@ function ResultBanner({ result }: { result: LastResult }) {
   )
 }
 
-// 단순 SVG 라인 차트 — 외부 의존 없음. 최근 N개를 시간 오름차순으로 그림.
-function WeightChart({ records }: { records: WeightRecord[] }) {
-  const MAX_POINTS = 20
-  // 서버는 DESC. 차트는 오름차순.
-  const points = [...records]
-    .slice(0, MAX_POINTS)
-    .reverse()
-    .map((r) => ({ x: new Date(r.recordedAt).getTime(), y: r.weight }))
+// 단순 SVG 라인 차트 — 외부 의존 없음. `days`로 지정한 최근 N일(오늘 포함) 윈도우.
+function WeightChart({ records, days }: { records: WeightRecord[]; days: number }) {
+  const DAY_MS = 24 * 60 * 60 * 1000
+  // 윈도우: [오늘-(N-1)일 00:00, 내일 00:00) — 오늘 포함 N일
+  const now = new Date()
+  const xMax = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime()
+  const xMin = xMax - days * DAY_MS
 
-  if (points.length < 2) {
-    return <p className="muted">기록이 2건 이상 쌓이면 추세 그래프가 표시됩니다.</p>
-  }
+  const points = records
+    .map((r) => ({ x: new Date(r.recordedAt).getTime(), y: r.weight }))
+    .filter((p) => p.x >= xMin && p.x < xMax)
+    .sort((a, b) => a.x - b.x)
 
   const width = 560
-  const height = 160
-  const pad = { top: 12, right: 12, bottom: 24, left: 36 }
+  const height = 180
+  const pad = { top: 12, right: 12, bottom: 32, left: 36 }
 
-  const xs = points.map((p) => p.x)
+  // y축 — 데이터가 없으면 임의 범위(라벨만 비움)
   const ys = points.map((p) => p.y)
-  const xMin = Math.min(...xs)
-  const xMax = Math.max(...xs)
-  const yMin = Math.min(...ys)
-  const yMax = Math.max(...ys)
-  // y 축에 위·아래 여백
+  const yMin = points.length ? Math.min(...ys) : 0
+  const yMax = points.length ? Math.max(...ys) : 1
   const yPadding = Math.max((yMax - yMin) * 0.15, 0.1)
   const yLo = yMin - yPadding
   const yHi = yMax + yPadding
 
   const sx = (x: number) =>
-    pad.left + ((x - xMin) / Math.max(xMax - xMin, 1)) * (width - pad.left - pad.right)
+    pad.left + ((x - xMin) / (xMax - xMin)) * (width - pad.left - pad.right)
   const sy = (y: number) =>
     pad.top + (1 - (y - yLo) / (yHi - yLo)) * (height - pad.top - pad.bottom)
 
-  const path = points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`)
-    .join(' ')
+  // 날짜 라벨
+  // - 7일 이하: 각 날 정오 위치 (N개)
+  // - 8일 이상: 양끝 포함 7개 균등 분포 (양끝 라벨은 시작/끝 정렬로 클리핑 방지)
+  const startMidnight = new Date(xMin)
+  const labelCount = days <= 7 ? days : 7
+  const dayLabels = Array.from({ length: labelCount }, (_, i) => {
+    let t: number
+    let anchor: 'start' | 'middle' | 'end' = 'middle'
+    if (days <= 7) {
+      const d = new Date(
+        startMidnight.getFullYear(),
+        startMidnight.getMonth(),
+        startMidnight.getDate() + i,
+      )
+      t = d.getTime() + DAY_MS / 2
+    } else {
+      t = xMin + (i / (labelCount - 1)) * (xMax - xMin)
+      if (i === 0) anchor = 'start'
+      else if (i === labelCount - 1) anchor = 'end'
+    }
+    const date = new Date(t)
+    return {
+      x: sx(t),
+      label: `${date.getMonth() + 1}/${date.getDate()}`,
+      anchor,
+    }
+  })
+
+  const path =
+    points.length >= 2
+      ? points
+          .map((p, i) => `${i === 0 ? 'M' : 'L'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`)
+          .join(' ')
+      : null
 
   return (
     <div className="weight-chart">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="체중 추세">
-        {/* y축 라벨 */}
-        <text x={4} y={pad.top + 4} className="weight-axis">
-          {yHi.toFixed(1)}
-        </text>
-        <text x={4} y={height - pad.bottom} className="weight-axis">
-          {yLo.toFixed(1)}
-        </text>
-        <path d={path} className="weight-line" />
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`체중 추세 (최근 ${days}일)`}>
+        {/* y축 라벨 — 데이터가 있을 때만 */}
+        {points.length > 0 && (
+          <>
+            <text x={4} y={pad.top + 4} className="weight-axis">
+              {yHi.toFixed(1)}
+            </text>
+            <text x={4} y={height - pad.bottom} className="weight-axis">
+              {yLo.toFixed(1)}
+            </text>
+          </>
+        )}
+        {/* x축 날짜 라벨 */}
+        {dayLabels.map((d, i) => (
+          <text
+            key={i}
+            x={d.x}
+            y={height - 10}
+            className="weight-axis"
+            textAnchor={d.anchor}
+          >
+            {d.label}
+          </text>
+        ))}
+        {path && <path d={path} className="weight-line" />}
         {points.map((p, i) => (
           <circle key={i} cx={sx(p.x)} cy={sy(p.y)} r={3} className="weight-dot" />
         ))}
+        {points.length === 0 && (
+          <text
+            x={width / 2}
+            y={height / 2}
+            className="weight-axis"
+            textAnchor="middle"
+          >
+            이 기간에 기록이 없습니다
+          </text>
+        )}
       </svg>
     </div>
   )
