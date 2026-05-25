@@ -194,3 +194,33 @@
   color: #9ca3af;
   font-size: 0.9rem;
 }
+
+.weight-pager {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.weight-pager button {
+  min-width: 2rem;
+  padding: 0.3rem 0.55rem;
+  background: #fff;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.weight-pager button:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.weight-pager button.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}

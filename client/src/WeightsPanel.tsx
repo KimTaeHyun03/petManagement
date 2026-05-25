@@ -45,6 +45,16 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
   // 차트 표시 범위
   const [range, setRange] = useState<RangeKey>('week')
 
+  // 기록 목록 페이지네이션
+  const PAGE_SIZE = 5
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(records.length / PAGE_SIZE))
+  // records 변동으로 현재 page가 범위를 벗어나면 보정
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
+  const pagedRecords = records.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   async function reload() {
     setLoading(true)
     setError(null)
@@ -60,6 +70,7 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
   useEffect(() => {
     reload()
     setLastResult(null)
+    setPage(1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [petId])
 
@@ -98,6 +109,7 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
       setWeight('')
       setRecordedAtLocal(nowLocalForInput())
       setMemo('')
+      setPage(1)
       await reload()
       onChanged?.()
     } catch (err) {
@@ -186,7 +198,7 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
           </div>
           <WeightChart records={records} days={RANGE_DAYS[range]} />
           <ul className="weight-list">
-            {records.map((rec) => (
+            {pagedRecords.map((rec) => (
               <li key={rec.id} className="weight-item">
                 <div className="weight-item-info">
                   <div className="weight-value">{rec.weight} kg</div>
@@ -206,6 +218,21 @@ export default function WeightsPanel({ petId, petName, onChanged }: Props) {
               </li>
             ))}
           </ul>
+          {totalPages > 1 && (
+            <nav className="weight-pager" aria-label="기록 페이지">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  aria-current={p === page ? 'page' : undefined}
+                  className={p === page ? 'active' : ''}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+              ))}
+            </nav>
+          )}
         </>
       )}
 
