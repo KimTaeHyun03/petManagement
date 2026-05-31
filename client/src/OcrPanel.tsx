@@ -84,20 +84,23 @@ export default function OcrPanel({ pets }: Props) {
 
   if (pets.length === 0) {
     return (
-      <section className="card">
-        <h2>성분표 스캔</h2>
-        <p className="muted">먼저 반려동물을 등록해 주세요.</p>
-      </section>
+      <div className="card">
+        <div className="card-title">성분표 스캔</div>
+        <div className="empty-state">
+          <div className="empty-icon">📷</div>
+          <p className="empty-text">먼저 반려동물을 등록해 주세요.</p>
+        </div>
+      </div>
     )
   }
 
   return (
-    <section className="card">
-      <h2>성분표 스캔</h2>
+    <div className="card">
+      <div className="card-title">성분표 스캔</div>
 
       {/* 펫 선택 */}
       <div className="ocr-select-row">
-        <label style={{ fontSize: 13, color: '#374151', whiteSpace: 'nowrap' }}>
+        <label style={{ fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap', fontWeight: 600 }}>
           반려동물
         </label>
         <select value={petId} onChange={(e) => { setPetId(e.target.value); setResult(null); setSaved(false) }}>
@@ -124,15 +127,15 @@ export default function OcrPanel({ pets }: Props) {
           <>
             <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
             <div>클릭하거나 이미지를 끌어다 놓으세요</div>
-            <div style={{ fontSize: 12, marginTop: 4 }}>jpg, png, bmp, tiff · 최대 10MB</div>
+            <div style={{ fontSize: 12, marginTop: 4, color: 'var(--text-muted)' }}>jpg, png, bmp, tiff · 최대 10MB</div>
           </>
         )}
       </div>
 
-      {error && <p className="error" style={{ marginTop: 10 }}>{error}</p>}
+      {error && <div className="alert alert-error" style={{ marginTop: 10 }}>{error}</div>}
 
       <button
-        className="scan-btn"
+        className="btn btn-primary btn-full scan-btn"
         onClick={handleScan}
         disabled={!file || !petId || scanning}
       >
@@ -158,9 +161,9 @@ export default function OcrPanel({ pets }: Props) {
             )}
 
             {result.docType === 'unknown' && (
-              <div className="alert-block" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                <div className="alert-title" style={{ color: '#374151' }}>문서 유형을 인식하지 못했어요</div>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>성분표 또는 영수증 이미지를 올려주세요.</div>
+              <div className="alert-block" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                <div className="alert-title" style={{ color: 'var(--text)' }}>문서 유형을 인식하지 못했어요</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>성분표 또는 영수증 이미지를 올려주세요.</div>
               </div>
             )}
 
@@ -200,7 +203,7 @@ export default function OcrPanel({ pets }: Props) {
 
             {/* 저장 버튼 — 성분표이고 아직 저장 안 한 경우에만 노출 */}
             {result.docType === 'ingredient' && !saved && (
-              <button className="confirm-btn" onClick={handleConfirm} disabled={confirming}>
+              <button className="btn btn-primary btn-full confirm-btn" onClick={handleConfirm} disabled={confirming}>
                 {confirming ? '저장 중…' : '이 결과를 기록에 저장'}
               </button>
             )}
@@ -211,7 +214,7 @@ export default function OcrPanel({ pets }: Props) {
           </div>
         </div>
       )}
-    </section>
+    </div>
   )
 }
 

@@ -1,0 +1,52 @@
+/* ChatbotPanel component-specific overrides */
+/* Most chatbot styles are already defined in App.css */
+
+.chatbot-pet-selector {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chatbot-pet-selector label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chatbot-pet-selector select {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.chatbot-pet-selector select:focus {
+  border-color: var(--primary);
+}
+
+.chat-timestamp {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-top: 3px;
+  padding: 0 2px;
+}
+
+.chat-msg-bot .chat-timestamp {
+  text-align: left;
+}
+
+.chat-msg-user .chat-timestamp {
+  text-align: right;
+}

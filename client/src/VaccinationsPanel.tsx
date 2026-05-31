@@ -159,7 +159,12 @@ export default function VaccinationsPanel({ petId, petName, species }: Props) {
       </form>
 
       {/* 접종 이력 목록 */}
-      {loading && <p>로딩 중…</p>}
+      {loading && (
+        <div className="loading-wrap">
+          <div className="loading-spinner"></div>
+          <span>로딩 중…</span>
+        </div>
+      )}
       {error && <p className="error">{error}</p>}
       {!loading && records.length === 0 && (
         <p className="vacc-empty">아직 기록된 접종이 없습니다.</p>
