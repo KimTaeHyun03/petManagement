@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { api, errorMessage, type AuthUser, type Pet } from './api'
 import VaccinationsPanel from './VaccinationsPanel'
 import OcrPanel from './OcrPanel'
@@ -226,12 +226,6 @@ function Sidebar({ screen, onNavigate, userEmail, onLogout }: SidebarProps) {
         </button>
 
         <div className="sidebar-section-label">분석</div>
-        <button
-          className={`nav-item${screen === 'chatbot' ? ' active' : ''}`}
-          onClick={() => onNavigate('chatbot')}
-        >
-          <span className="nav-item-icon">💬</span>챗봇 상담
-        </button>
         <button
           className={`nav-item${screen === 'timeline' ? ' active' : ''}`}
           onClick={() => onNavigate('timeline')}
