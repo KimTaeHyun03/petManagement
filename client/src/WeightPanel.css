@@ -53,6 +53,23 @@
   gap: 8px;
 }
 
+.weight-delete {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.weight-delete:hover {
+  background: var(--danger-bg, #fee);
+  color: var(--danger, #d33);
+}
+
 .weight-chart-svg {
   width: 100%;
   display: block;

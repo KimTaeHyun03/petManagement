@@ -1,23 +1,29 @@
-import { useState } from 'react'
-import { type Pet } from './api'
+import { useEffect, useState } from 'react'
+import {
+  api,
+  errorMessage,
+  type Pet,
+  type WeightRecord,
+  type WeightJudgement,
+} from './api'
 import './WeightPanel.css'
 
 interface Props {
   pets: Pet[]
 }
 
-interface WeightEntry {
-  date: string
+interface LastResult {
+  judgement: WeightJudgement
+  surge: boolean
+  deltaRatio: number | null
   weight: number
 }
 
-const MOCK_WEIGHT_DATA: WeightEntry[] = [
-  { date: '2025-05-28', weight: 4.2 },
-  { date: '2025-05-14', weight: 4.0 },
-  { date: '2025-04-30', weight: 3.9 },
-  { date: '2025-04-16', weight: 4.1 },
-  { date: '2025-04-02', weight: 4.3 },
-]
+interface WeightEntry {
+  id: string
+  date: string
+  weight: number
+}
 
 function WeightChart({ data }: { data: WeightEntry[] }) {
   if (data.length === 0) return null
@@ -37,16 +43,18 @@ function WeightChart({ data }: { data: WeightEntry[] }) {
   const innerH = HEIGHT - PAD_TOP - PAD_BOTTOM
 
   function xPos(i: number) {
-    return PAD_LEFT + (i / (data.length - 1)) * innerW
+    return data.length === 1
+      ? PAD_LEFT + innerW / 2
+      : PAD_LEFT + (i / (data.length - 1)) * innerW
   }
 
   function yPos(w: number) {
+    if (maxW === minW) return PAD_TOP + innerH / 2
     return PAD_TOP + innerH - ((w - minW) / (maxW - minW)) * innerH
   }
 
   const points = data.map((d, i) => `${xPos(i)},${yPos(d.weight)}`).join(' ')
 
-  // Y-axis labels: 3 ticks
   const yTicks = [minW, (minW + maxW) / 2, maxW]
 
   return (
@@ -82,7 +90,7 @@ function WeightChart({ data }: { data: WeightEntry[] }) {
         {/* X-axis date labels */}
         {data.map((d, i) => (
           <text
-            key={d.date}
+            key={`${d.id}-x`}
             x={xPos(i)}
             y={HEIGHT - 6}
             textAnchor="middle"
@@ -93,12 +101,12 @@ function WeightChart({ data }: { data: WeightEntry[] }) {
         ))}
 
         {/* Line */}
-        <polyline points={points} className="weight-polyline" />
+        {data.length >= 2 && <polyline points={points} className="weight-polyline" />}
 
         {/* Dots */}
         {data.map((d, i) => (
           <circle
-            key={d.date}
+            key={`${d.id}-dot`}
             cx={xPos(i)}
             cy={yPos(d.weight)}
             r={4}
@@ -109,7 +117,7 @@ function WeightChart({ data }: { data: WeightEntry[] }) {
         {/* Weight value labels above dots */}
         {data.map((d, i) => (
           <text
-            key={`label-${d.date}`}
+            key={`${d.id}-label`}
             x={xPos(i)}
             y={yPos(d.weight) - 8}
             textAnchor="middle"
@@ -130,42 +138,124 @@ function calcDiff(current: number, previous: number) {
   return { diff, pct }
 }
 
+const JUDGE_LABEL: Record<WeightJudgement, string> = {
+  normal: '정상 체중',
+  over: '과체중',
+  under: '저체중',
+  unknown: '판정 불가 (표준 데이터 없음)',
+}
+
 export default function WeightPanel({ pets }: Props) {
-  const [selectedPetId, setSelectedPetId] = useState<string>(pets[0]?.id ?? 'mock-1')
-  const [weightData, setWeightData] = useState<WeightEntry[]>(MOCK_WEIGHT_DATA)
+  const [selectedPetId, setSelectedPetId] = useState<string>(pets[0]?.id ?? '')
+  const [records, setRecords] = useState<WeightRecord[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]!)
   const [newWeight, setNewWeight] = useState('')
+  const [newMemo, setNewMemo] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [lastResult, setLastResult] = useState<LastResult | null>(null)
 
   const selectedPet = pets.find((p) => p.id === selectedPetId)
-  const petName = selectedPet?.name ?? '콩이'
+  const petName = selectedPet?.name ?? ''
 
-  // Sort by date ascending for chart
-  const sorted = [...weightData].sort((a, b) => a.date.localeCompare(b.date))
+  // 펫 목록이 늦게 도착하면 첫 펫 자동 선택
+  useEffect(() => {
+    if (!selectedPetId && pets.length > 0) {
+      setSelectedPetId(pets[0].id)
+    }
+  }, [pets, selectedPetId])
 
-  // Check for rapid weight change (most recent vs previous)
-  const sortedDesc = [...weightData].sort((a, b) => b.date.localeCompare(a.date))
-  const hasRapidChange =
-    sortedDesc.length >= 2 &&
-    calcDiff(sortedDesc[0].weight, sortedDesc[1].weight).pct > 10
+  async function reload(petId: string) {
+    setLoading(true)
+    setError(null)
+    try {
+      setRecords(await api.listWeights(petId))
+    } catch (err) {
+      setError(errorMessage(err))
+      setRecords([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  function handleAddWeight(e: React.FormEvent) {
+  // 선택된 펫이 바뀌면 기록 다시 로드
+  useEffect(() => {
+    if (!selectedPetId) {
+      setRecords([])
+      return
+    }
+    setLastResult(null)
+    reload(selectedPetId)
+  }, [selectedPetId])
+
+  // 서버 WeightRecord → 차트/목록용 엔트리. 날짜 오름차순(차트), 내림차순(목록).
+  const entries: WeightEntry[] = records.map((r) => ({
+    id: r.id,
+    date: r.recordedAt.slice(0, 10),
+    weight: r.weight,
+  }))
+  const sortedAsc = [...entries].sort((a, b) => a.date.localeCompare(b.date))
+  const sortedDesc = [...entries].sort((a, b) => b.date.localeCompare(a.date))
+
+  async function handleAddWeight(e: React.FormEvent) {
     e.preventDefault()
+    setFormError(null)
+    if (!selectedPetId) {
+      setFormError('반려동물을 먼저 선택해주세요.')
+      return
+    }
     const w = parseFloat(newWeight)
-    if (isNaN(w) || w <= 0 || w > 100) return
-    setWeightData((prev) => {
-      const filtered = prev.filter((d) => d.date !== newDate)
-      return [...filtered, { date: newDate, weight: w }]
-    })
-    setNewWeight('')
+    if (isNaN(w) || w <= 0 || w > 100) {
+      setFormError('체중은 0보다 크고 100kg 이하의 숫자여야 합니다.')
+      return
+    }
+    // 날짜만 입력받으므로 정오로 고정해 ISO 변환 (서버 zod datetime 통과)
+    const recordedAtIso = new Date(`${newDate}T12:00:00`).toISOString()
+    setBusy(true)
+    try {
+      const res = await api.createWeight(selectedPetId, {
+        weight: w,
+        recordedAt: recordedAtIso,
+        memo: newMemo || undefined,
+      })
+      setLastResult({
+        judgement: res.judgement,
+        surge: res.surge,
+        deltaRatio: res.deltaRatio,
+        weight: res.record.weight,
+      })
+      setNewWeight('')
+      setNewMemo('')
+      await reload(selectedPetId)
+    } catch (err) {
+      setFormError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!selectedPetId) return
+    if (!confirm('이 체중 기록을 삭제할까요?')) return
+    try {
+      await api.deleteWeight(selectedPetId, id)
+      setLastResult(null)
+      await reload(selectedPetId)
+    } catch (err) {
+      alert(errorMessage(err))
+    }
   }
 
   return (
     <div>
       {/* Pet selector */}
       <div className="weight-pet-selector">
-        {pets.length > 0 ? (
-          <div className="field">
-            <label className="field-label">반려동물 선택</label>
+        <div className="field">
+          <label className="field-label">반려동물 선택</label>
+          {pets.length > 0 ? (
             <select
               className="field-select"
               value={selectedPetId}
@@ -177,118 +267,174 @@ export default function WeightPanel({ pets }: Props) {
                 </option>
               ))}
             </select>
-          </div>
-        ) : (
-          <div className="field">
-            <label className="field-label">반려동물 (데모)</label>
-            <select className="field-select" value="mock-1" readOnly>
-              <option value="mock-1">🐶 콩이 (데모)</option>
-              <option value="mock-2">🐱 나비 (데모)</option>
-            </select>
-          </div>
-        )}
-      </div>
-
-      {/* Rapid change alert */}
-      {hasRapidChange && (
-        <div className="alert alert-warning weight-alert">
-          ⚠️ <strong>급격한 체중 변화가 감지됐어요!</strong> {petName}의 체중이 최근 기록 대비 10% 이상 변화했습니다. 수의사 상담을 권장합니다.
-        </div>
-      )}
-
-      {/* 2-col layout: chart + list */}
-      <div className="weight-layout">
-        {/* Chart */}
-        <div className="weight-chart-wrap">
-          <div className="weight-chart-title">📈 체중 추이</div>
-          <WeightChart data={sorted} />
-
-          {/* Add form */}
-          <div className="weight-add-form">
-            <div className="weight-add-form-title">체중 기록 추가</div>
-            <form onSubmit={handleAddWeight}>
-              <div className="weight-add-row">
-                <div className="field">
-                  <label className="field-label" htmlFor="w-date">날짜</label>
-                  <input
-                    id="w-date"
-                    className="field-input"
-                    type="date"
-                    value={newDate}
-                    onChange={(e) => setNewDate(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="field">
-                  <label className="field-label" htmlFor="w-weight">체중 (kg)</label>
-                  <input
-                    id="w-weight"
-                    className="field-input"
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    max="100"
-                    value={newWeight}
-                    onChange={(e) => setNewWeight(e.target.value)}
-                    placeholder="예: 4.2"
-                    required
-                  />
-                </div>
-                <div>
-                  <button type="submit" className="btn btn-primary" style={{ marginTop: 20 }}>
-                    추가
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        {/* Weight list */}
-        <div className="weight-chart-wrap">
-          <div className="weight-list-title">📋 기록 목록</div>
-          {sortedDesc.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">⚖️</div>
-              <p className="empty-text">체중 기록이 없습니다.</p>
-            </div>
           ) : (
-            <ul className="weight-list">
-              {sortedDesc.map((entry, idx) => {
-                const prev = sortedDesc[idx + 1]
-                let diffEl: React.ReactNode = null
-                if (prev) {
-                  const { diff, pct } = calcDiff(entry.weight, prev.weight)
-                  if (Math.abs(diff) < 0.01) {
-                    diffEl = <span className="weight-diff-same">—</span>
-                  } else if (diff > 0) {
-                    diffEl = (
-                      <span className={`weight-diff-up${pct > 10 ? '' : ''}`}>
-                        ▲ +{diff.toFixed(1)} kg ({pct.toFixed(0)}%)
-                      </span>
-                    )
-                  } else {
-                    diffEl = (
-                      <span className="weight-diff-down">
-                        ▼ {diff.toFixed(1)} kg ({pct.toFixed(0)}%)
-                      </span>
-                    )
-                  }
-                }
-                return (
-                  <li key={entry.date} className="weight-item">
-                    <span className="weight-date">{entry.date}</span>
-                    <div className="weight-item-right">
-                      <span className="weight-val">{entry.weight.toFixed(1)} kg</span>
-                      {diffEl}
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
+            <p className="empty-text" style={{ fontSize: 13 }}>
+              반려동물을 먼저 등록해주세요.
+            </p>
           )}
         </div>
       </div>
+
+      {/* 최근 기록 판정/급변 배너 */}
+      {lastResult && (
+        <div
+          className={`alert weight-alert ${lastResult.surge ? 'alert-error' : 'alert-success'}`}
+        >
+          <strong>{lastResult.weight}kg</strong> 기록됨 — {JUDGE_LABEL[lastResult.judgement]}
+          {lastResult.surge && lastResult.deltaRatio !== null && (
+            <>
+              {' · '}⚠️ 직전 기록 대비{' '}
+              <strong>
+                {lastResult.deltaRatio >= 0 ? '+' : ''}
+                {(lastResult.deltaRatio * 100).toFixed(1)}%
+              </strong>{' '}
+              변동 — 보호자에게 알림 메일이 발송되었습니다.
+            </>
+          )}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="loading-wrap">
+          <div className="loading-spinner"></div>
+          <span>체중 기록을 불러오는 중…</span>
+        </div>
+      ) : error ? (
+        <div className="alert alert-error">{error}</div>
+      ) : (
+        /* 2-col layout: chart + list */
+        <div className="weight-layout">
+          {/* Chart + add form */}
+          <div className="weight-chart-wrap">
+            <div className="weight-chart-title">📈 체중 추이</div>
+            {sortedAsc.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">⚖️</div>
+                <p className="empty-text">아직 기록된 체중이 없습니다.</p>
+              </div>
+            ) : (
+              <WeightChart data={sortedAsc} />
+            )}
+
+            <div className="weight-add-form">
+              <div className="weight-add-form-title">
+                체중 기록 추가{petName && ` — ${petName}`}
+              </div>
+              <form onSubmit={handleAddWeight}>
+                <div className="weight-add-row">
+                  <div className="field">
+                    <label className="field-label" htmlFor="w-date">날짜</label>
+                    <input
+                      id="w-date"
+                      className="field-input"
+                      type="date"
+                      value={newDate}
+                      onChange={(e) => setNewDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="field-label" htmlFor="w-weight">체중 (kg)</label>
+                    <input
+                      id="w-weight"
+                      className="field-input"
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      max="100"
+                      value={newWeight}
+                      onChange={(e) => setNewWeight(e.target.value)}
+                      placeholder="예: 4.2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      style={{ marginTop: 20 }}
+                      disabled={busy || !selectedPetId}
+                    >
+                      {busy ? '추가 중…' : '추가'}
+                    </button>
+                  </div>
+                </div>
+                <div className="field">
+                  <label className="field-label" htmlFor="w-memo">메모</label>
+                  <input
+                    id="w-memo"
+                    className="field-input"
+                    type="text"
+                    maxLength={200}
+                    value={newMemo}
+                    onChange={(e) => setNewMemo(e.target.value)}
+                    placeholder="병원 측정, 식후 등 (선택)"
+                  />
+                </div>
+                {formError && (
+                  <div className="alert alert-error" style={{ marginTop: 12 }}>
+                    {formError}
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+
+          {/* Weight list */}
+          <div className="weight-chart-wrap">
+            <div className="weight-list-title">📋 기록 목록</div>
+            {sortedDesc.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">⚖️</div>
+                <p className="empty-text">체중 기록이 없습니다.</p>
+              </div>
+            ) : (
+              <ul className="weight-list">
+                {sortedDesc.map((entry, idx) => {
+                  const prev = sortedDesc[idx + 1]
+                  let diffEl: React.ReactNode = null
+                  if (prev) {
+                    const { diff, pct } = calcDiff(entry.weight, prev.weight)
+                    if (Math.abs(diff) < 0.01) {
+                      diffEl = <span className="weight-diff-same">—</span>
+                    } else if (diff > 0) {
+                      diffEl = (
+                        <span className="weight-diff-up">
+                          ▲ +{diff.toFixed(1)} kg ({pct.toFixed(0)}%)
+                        </span>
+                      )
+                    } else {
+                      diffEl = (
+                        <span className="weight-diff-down">
+                          ▼ {diff.toFixed(1)} kg ({pct.toFixed(0)}%)
+                        </span>
+                      )
+                    }
+                  }
+                  return (
+                    <li key={entry.id} className="weight-item">
+                      <span className="weight-date">{entry.date}</span>
+                      <div className="weight-item-right">
+                        <span className="weight-val">{entry.weight.toFixed(1)} kg</span>
+                        {diffEl}
+                        <button
+                          type="button"
+                          className="weight-delete"
+                          onClick={() => handleDelete(entry.id)}
+                          title="삭제"
+                          aria-label="삭제"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

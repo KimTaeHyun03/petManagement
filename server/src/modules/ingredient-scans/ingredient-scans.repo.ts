@@ -8,6 +8,7 @@ export interface IngredientScanRow {
   extracted_text:         string;
   matched_foods_json:     object[];
   matched_allergies_json: string[];
+  product_name:           string | null;
   scanned_at:             Date;
 }
 
@@ -17,14 +18,15 @@ export async function insertIngredientScan(
 ): Promise<IngredientScanRow> {
   const { rows } = await pool.query<IngredientScanRow>(
     `INSERT INTO ingredient_scans
-       (pet_id, extracted_text, matched_foods_json, matched_allergies_json)
-     VALUES ($1, $2, $3::jsonb, $4::jsonb)
+       (pet_id, extracted_text, matched_foods_json, matched_allergies_json, product_name)
+     VALUES ($1, $2, $3::jsonb, $4::jsonb, $5)
      RETURNING *`,
     [
       input.petId,
       input.extractedText,
       JSON.stringify(input.matchedFoodsJson),
       JSON.stringify(input.matchedAllergiesJson),
+      input.productName ?? null,
     ],
   );
   return rows[0]!;

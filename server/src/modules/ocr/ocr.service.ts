@@ -7,6 +7,8 @@ export type DocType = 'ingredient' | 'receipt' | 'unknown';
 export interface OcrResult {
   extractedText: string;
   docType: DocType;
+  /** OCR 텍스트의 "제품명" 라벨에서 자동 추출한 값. 못 찾으면 null. */
+  productName: string | null;
 }
 
 // ─── CLOVA OCR 호출 ───────────────────────────────────────────────────────────
@@ -76,7 +78,23 @@ export async function scanImage(
 ): Promise<OcrResult> {
   const extractedText = await callClova(imageBuffer, mimetype, originalName);
   const docType = classifyDoc(extractedText);
-  return { extractedText, docType };
+  const productName = deriveProductName(extractedText);
+  return { extractedText, docType, productName };
+}
+
+// OCR 텍스트에서 "제품명" 라벨 뒤의 값을 추출.
+// 한국 패키지 표준 표기: "제품명: 강아지 프리미엄 사료"
+// "제 품 명"처럼 글자 사이 공백이 있어도 인식하도록 라벨 사이 \s* 허용.
+// 종료 라벨도 동일하게 글자 사이 공백 허용.
+// 종료 조건은 (a) 다음 라벨 키워드, (b) 줄바꿈, (c) 텍스트 끝.
+export function deriveProductName(text: string): string | null {
+  const m = text.match(
+    /제\s*품\s*명\s*[:：]?\s*([^\n]+?)(?=\s*(?:원\s*재\s*료|원\s*료|성\s*분|영\s*양\s*성\s*분|보\s*증\s*성\s*분|품\s*목\s*보\s*고|제\s*조\s*원|유\s*통\s*기\s*한|규\s*격|중\s*량|포\s*장)|\n|$)/,
+  );
+  if (!m) return null;
+  const value = m[1]!.trim();
+  if (value.length < 2 || value.length > 60) return null;
+  return value;
 }
 
 // ─── 내부 유틸 ─────────────────────────────────────────────────────────────────
@@ -95,16 +113,19 @@ function mimetypeToFormat(mimetype: string): string {
 
 interface ClovaOcrResponse {
   images: Array<{
-    fields: Array<{ inferText: string }>;
+    fields: Array<{ inferText: string; lineBreak?: boolean }>;
   }>;
 }
 
+// CLOVA V2 General OCR은 각 field에 `lineBreak: true`로 줄 끝을 표시한다.
+// 이걸 이용해 같은 줄은 공백, 줄 끝은 \n 으로 합쳐서 레이아웃을 부분 보존한다.
+// (예: 패키지 상단의 제품명이 첫 줄로 분리됨 → 타임라인에서 제품명 추출 가능)
 function extractText(data: ClovaOcrResponse): string {
-  return (
-    data.images
-      .flatMap((img) => img.fields)
-      .map((f) => f.inferText)
-      .join(' ')
-      .trim()
-  );
+  return data.images
+    .flatMap((img) => img.fields)
+    .reduce((acc, f, i, arr) => {
+      const sep = f.lineBreak || i === arr.length - 1 ? '\n' : ' ';
+      return acc + f.inferText + sep;
+    }, '')
+    .trim();
 }

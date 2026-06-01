@@ -157,7 +157,7 @@ export default function ChatbotPanel({ pets }: Props) {
             ))}
           </select>
         ) : (
-          <select value="mock" readOnly>
+          <select value="mock" disabled>
             <option value="mock">🐶 콩이 (데모)</option>
           </select>
         )}

@@ -21,7 +21,7 @@ export async function scan(req: Request, res: Response, next: NextFunction) {
     }
 
     // OCR 호출 + 문서 분류
-    const { extractedText, docType } = await ocrService.scanImage(
+    const { extractedText, docType, productName } = await ocrService.scanImage(
       file.buffer,
       file.mimetype,
       file.originalname,
@@ -36,6 +36,7 @@ export async function scan(req: Request, res: Response, next: NextFunction) {
     res.json({
       docType,
       extractedText,
+      productName,
       matches,
       disclaimer: DISCLAIMER,
     });
