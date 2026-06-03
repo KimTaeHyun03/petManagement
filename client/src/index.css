@@ -1,14 +1,55 @@
-/* Vite 데모 스타일은 App.css의 테스트 콘솔과 충돌해서 걷어냈다.
-   여기엔 전역 reset/타이포만 둔다. */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
 
 :root {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  font-size: 16px;
-  color-scheme: light;
+  --bg: #F8F5F0;
+  --bg-subtle: #F0EBE3;
+  --sidebar-bg: #1E1814;
+  --sidebar-hover: #2A231C;
+  --sidebar-active: #3D3024;
+  --sidebar-text: #C9B99F;
+  --sidebar-text-active: #F5EDE0;
+  --primary: #3D7A5E;
+  --primary-hover: #2F6049;
+  --primary-light: #D4EDDF;
+  --primary-text: #1A4A35;
+  --accent: #E8963A;
+  --accent-hover: #D4832A;
+  --accent-light: #FEF0DC;
+  --accent-text: #7A4510;
+  --red: #C0392B;
+  --red-light: #FDE8E6;
+  --red-text: #7A1A10;
+  --yellow: #C08A10;
+  --yellow-light: #FEF6E4;
+  --yellow-text: #7A5208;
+  --border: #E8E0D6;
+  --border-strong: #D4C8B8;
+  --text: #1E1814;
+  --text-muted: #8C7E72;
+  --text-light: #B5A898;
+  --card-bg: #FFFFFF;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow-sm: 0 1px 3px rgba(30,24,20,0.08), 0 1px 2px rgba(30,24,20,0.04);
+  --shadow: 0 4px 12px rgba(30,24,20,0.10), 0 1px 4px rgba(30,24,20,0.05);
+  --shadow-lg: 0 10px 30px rgba(30,24,20,0.12), 0 4px 10px rgba(30,24,20,0.06);
+  --sidebar-width: 232px;
 }
 
-html, body { margin: 0; padding: 0; min-height: 100vh; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
 
-#root { min-height: 100vh; }
+body {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
 
-h1, h2, h3, p { margin: 0; }
+#root { height: 100%; }
+h1,h2,h3,h4,p { margin: 0; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }

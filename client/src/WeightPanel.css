@@ -1,0 +1,102 @@
+/* WeightPanel component styles */
+
+.weight-pet-selector {
+  margin-bottom: 20px;
+}
+
+.weight-alert {
+  margin-bottom: 16px;
+}
+
+.weight-add-form {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.weight-add-form-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.weight-add-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.weight-add-row .field {
+  flex: 1;
+}
+
+.weight-chart-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.weight-list-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.weight-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weight-delete {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.weight-delete:hover {
+  background: var(--danger-bg, #fee);
+  color: var(--danger, #d33);
+}
+
+.weight-chart-svg {
+  width: 100%;
+  display: block;
+}
+
+.weight-axis-label {
+  font-size: 10px;
+  fill: var(--text-muted);
+}
+
+.weight-polyline {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.weight-dot {
+  fill: var(--primary);
+  stroke: #fff;
+  stroke-width: 2;
+}
+
+@media (max-width: 900px) {
+  .weight-add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
