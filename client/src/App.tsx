@@ -461,7 +461,6 @@ function PetsScreen({ pets }: { pets: Pet[] }) {
           <VaccinationsPanel
             petId={selectedPet.id}
             petName={selectedPet.name}
-            species={selectedPet.species}
           />
         </div>
       )}
@@ -682,7 +681,6 @@ function VaccinationsScreen({ pets }: { pets: Pet[] }) {
             <VaccinationsPanel
               petId={selectedPet.id}
               petName={selectedPet.name}
-              species={selectedPet.species}
             />
           )}
         </div>
