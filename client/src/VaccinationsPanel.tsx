@@ -6,9 +6,11 @@ interface Props {
   petId: string
   petName: string
   species: 'dog' | 'cat'
+  /** 기록 추가·삭제 후 호출 — 부모가 타임라인 같은 형제 패널을 reload하기 위한 신호. */
+  onChanged?: () => void
 }
 
-export default function VaccinationsPanel({ petId, petName, species }: Props) {
+export default function VaccinationsPanel({ petId, petName, species, onChanged }: Props) {
   const [records, setRecords] = useState<VaccinationRecord[]>([])
   const [vaccines, setVaccines] = useState<Vaccine[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,6 +68,7 @@ export default function VaccinationsPanel({ petId, petName, species }: Props) {
       setDoseNo(1)
       setVaccinatedAt(today())
       await reload()
+      onChanged?.()
     } catch (err) {
       setFormError(errorMessage(err))
     } finally {
@@ -78,6 +81,7 @@ export default function VaccinationsPanel({ petId, petName, species }: Props) {
     try {
       await api.deleteVaccination(petId, id)
       await reload()
+      onChanged?.()
     } catch (err) {
       alert(errorMessage(err))
     }

@@ -321,7 +321,6 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
                 </div>
               )) : (
                 <>
-                  {/* Mock pets when none loaded */}
                   <div className="pet-card" onClick={() => onNavigate('pets')}>
                     <div className="pet-card-avatar">🐶</div>
                     <div className="pet-card-body">

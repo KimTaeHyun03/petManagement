@@ -637,6 +637,10 @@ textarea.field-input {
   display: flex;
   align-items: center;
   gap: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
 }
 
 .pet-card:hover {
