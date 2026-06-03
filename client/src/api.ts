@@ -88,6 +88,8 @@ export interface MatchedFood {
 export interface ScanResult {
   docType: 'ingredient' | 'receipt' | 'unknown'
   extractedText: string
+  /** OCR 텍스트의 "제품명" 라벨에서 자동 추출한 값. 없으면 null. */
+  productName: string | null
   matches: {
     dangerFoods: MatchedFood[]
     allergies: string[]
@@ -101,8 +103,71 @@ export interface IngredientScan {
   extractedText: string
   matchedFoods: MatchedFood[]
   matchedAllergies: string[]
+  productName: string | null
   scannedAt: string
   disclaimer?: string
+}
+
+export interface WeightRecord {
+  id: string
+  petId: string
+  weight: number
+  recordedAt: string
+  memo: string | null
+  createdAt: string
+}
+
+export type WeightJudgement = 'normal' | 'over' | 'under' | 'unknown'
+
+export interface CreateWeightResponse {
+  record: WeightRecord
+  judgement: WeightJudgement
+  surge: boolean
+  deltaRatio: number | null
+}
+
+// 통합 타임라인 — discriminated union (서버 PLAN §4.7)
+export type TimelineEvent =
+  | {
+      type: 'weight'
+      id: string
+      petId: string
+      occurredAt: string
+      weight: number
+      memo: string | null
+      surge: boolean
+      deltaRatio: number | null
+    }
+  | {
+      type: 'vaccination'
+      id: string
+      petId: string
+      occurredAt: string
+      vaccineId: number
+      vaccineName: string
+      mandatory: boolean
+      severity: 'high' | 'low'
+      doseNo: number
+      doseTotal: number
+      source: 'manual' | 'ocr'
+      nextDueAt: string | null
+      memo: string | null
+    }
+  | {
+      type: 'ingredient_scan'
+      id: string
+      petId: string
+      occurredAt: string
+      matchedFoods: MatchedFood[]
+      matchedAllergies: string[]
+      extractedTextPreview: string
+      /** OCR 첫 줄에서 추출한 제품명 후보 — 없으면 null */
+      productName: string | null
+    }
+
+export interface TimelinePage {
+  events: TimelineEvent[]
+  nextBefore: string | null
 }
 
 // multipart 전송용 — Content-Type 헤더를 브라우저가 자동 설정하도록 headers 제외
@@ -187,10 +252,45 @@ export const api = {
     extractedText: string
     matchedFoodsJson: MatchedFood[]
     matchedAllergiesJson: string[]
+    productName?: string | null
   }) =>
     request<IngredientScan>('/api/ingredient-scans/confirm', {
       method: 'POST',
       body: JSON.stringify(input),
+    }),
+
+  listWeights: (petId: string) =>
+    request<WeightRecord[]>(`/api/pets/${petId}/weights`),
+
+  createWeight: (
+    petId: string,
+    input: { weight: number; recordedAt?: string; memo?: string },
+  ) =>
+    request<CreateWeightResponse>(`/api/pets/${petId}/weights`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  deleteWeight: (petId: string, id: string) =>
+    request<null>(`/api/pets/${petId}/weights/${id}`, { method: 'DELETE' }),
+
+  getTimeline: (petId: string, params?: { limit?: number; before?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.before) qs.set('before', params.before)
+    const s = qs.toString()
+    return request<TimelinePage>(`/api/pets/${petId}/timeline${s ? `?${s}` : ''}`)
+  },
+
+  getChatHistory: (petId: string) =>
+    request<Array<{ id: string; role: 'user' | 'assistant'; message: string; createdAt: string }>>(
+      `/api/pets/${petId}/chat`,
+    ),
+
+  sendChatMessage: (petId: string, message: string) =>
+    request<{ answer: string }>(`/api/pets/${petId}/chat`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
     }),
 }
 

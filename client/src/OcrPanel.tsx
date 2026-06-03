@@ -4,9 +4,11 @@ import './OcrPanel.css'
 
 interface Props {
   pets: Pet[]
+  /** confirmScan 저장 후 호출 — 부모가 타임라인 같은 형제 패널을 reload하기 위한 신호. */
+  onChanged?: () => void
 }
 
-export default function OcrPanel({ pets }: Props) {
+export default function OcrPanel({ pets, onChanged }: Props) {
   const [petId, setPetId]       = useState<string>(pets[0]?.id ?? '')
 
   // pets가 뒤늦게 로드될 때 petId가 빈 값이면 첫 번째 펫으로 초기화
@@ -24,6 +26,7 @@ export default function OcrPanel({ pets }: Props) {
   const [confirming, setConfirming] = useState(false)
   const [saved, setSaved]       = useState(false)
   const [error, setError]       = useState<string | null>(null)
+  const [productName, setProductName] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   function handleFile(f: File) {
@@ -32,6 +35,7 @@ export default function OcrPanel({ pets }: Props) {
     setSaved(false)
     setError(null)
     setShowText(false)
+    setProductName('')
     setPreview(URL.createObjectURL(f))
   }
 
@@ -56,6 +60,7 @@ export default function OcrPanel({ pets }: Props) {
     try {
       const res = await api.scanOcr(petId, file)
       setResult(res)
+      setProductName(res.productName ?? '')
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -73,8 +78,10 @@ export default function OcrPanel({ pets }: Props) {
         extractedText:        result.extractedText,
         matchedFoodsJson:     result.matches?.dangerFoods ?? [],
         matchedAllergiesJson: result.matches?.allergies ?? [],
+        productName:          productName.trim() || null,
       })
       setSaved(true)
+      onChanged?.()
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -84,20 +91,23 @@ export default function OcrPanel({ pets }: Props) {
 
   if (pets.length === 0) {
     return (
-      <section className="card">
-        <h2>성분표 스캔</h2>
-        <p className="muted">먼저 반려동물을 등록해 주세요.</p>
-      </section>
+      <div className="card">
+        <div className="card-title">성분표 스캔</div>
+        <div className="empty-state">
+          <div className="empty-icon">📷</div>
+          <p className="empty-text">먼저 반려동물을 등록해 주세요.</p>
+        </div>
+      </div>
     )
   }
 
   return (
-    <section className="card">
-      <h2>성분표 스캔</h2>
+    <div className="card">
+      <div className="card-title">성분표 스캔</div>
 
       {/* 펫 선택 */}
       <div className="ocr-select-row">
-        <label style={{ fontSize: 13, color: '#374151', whiteSpace: 'nowrap' }}>
+        <label style={{ fontSize: 13, color: 'var(--text)', whiteSpace: 'nowrap', fontWeight: 600 }}>
           반려동물
         </label>
         <select value={petId} onChange={(e) => { setPetId(e.target.value); setResult(null); setSaved(false) }}>
@@ -124,15 +134,15 @@ export default function OcrPanel({ pets }: Props) {
           <>
             <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
             <div>클릭하거나 이미지를 끌어다 놓으세요</div>
-            <div style={{ fontSize: 12, marginTop: 4 }}>jpg, png, bmp, tiff · 최대 10MB</div>
+            <div style={{ fontSize: 12, marginTop: 4, color: 'var(--text-muted)' }}>jpg, png, bmp, tiff · 최대 10MB</div>
           </>
         )}
       </div>
 
-      {error && <p className="error" style={{ marginTop: 10 }}>{error}</p>}
+      {error && <div className="alert alert-error" style={{ marginTop: 10 }}>{error}</div>}
 
       <button
-        className="scan-btn"
+        className="btn btn-primary btn-full scan-btn"
         onClick={handleScan}
         disabled={!file || !petId || scanning}
       >
@@ -158,10 +168,24 @@ export default function OcrPanel({ pets }: Props) {
             )}
 
             {result.docType === 'unknown' && (
-              <div className="alert-block" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-                <div className="alert-title" style={{ color: '#374151' }}>문서 유형을 인식하지 못했어요</div>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>성분표 또는 영수증 이미지를 올려주세요.</div>
+              <div className="alert-block" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                <div className="alert-title" style={{ color: 'var(--text)' }}>문서 유형을 인식하지 못했어요</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>성분표 또는 영수증 이미지를 올려주세요.</div>
               </div>
+            )}
+
+            {result.docType === 'ingredient' && (
+              <label className="product-name-field">
+                <span>제품명</span>
+                <input
+                  type="text"
+                  value={productName}
+                  onChange={(e) => setProductName(e.target.value)}
+                  placeholder={result.productName ? '' : 'OCR에서 제품명을 못 찾았어요. 직접 입력하세요.'}
+                  maxLength={120}
+                  disabled={saved}
+                />
+              </label>
             )}
 
             {result.docType === 'ingredient' && result.matches && (
@@ -200,7 +224,7 @@ export default function OcrPanel({ pets }: Props) {
 
             {/* 저장 버튼 — 성분표이고 아직 저장 안 한 경우에만 노출 */}
             {result.docType === 'ingredient' && !saved && (
-              <button className="confirm-btn" onClick={handleConfirm} disabled={confirming}>
+              <button className="btn btn-primary btn-full confirm-btn" onClick={handleConfirm} disabled={confirming}>
                 {confirming ? '저장 중…' : '이 결과를 기록에 저장'}
               </button>
             )}
@@ -211,7 +235,7 @@ export default function OcrPanel({ pets }: Props) {
           </div>
         </div>
       )}
-    </section>
+    </div>
   )
 }
 

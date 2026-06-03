@@ -1,3 +1,22 @@
-./claude
+# Claude Code 로컬 설정 (팀원과 공유 X — 머신마다 다름)
+.claude/
 
+# 환경 변수
+.env
+.env.*
+!.env.example
+
+# OS / 에디터 잡파일
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# 의존성·빌드 산출물
+node_modules/
+dist/
+package-lock.json
+
+# 사용자 메모
 plan2.md

@@ -33,4 +33,7 @@ export const env = {
   // Naver CLOVA OCR (General 도메인 petocr)
   clovaOcrInvokeUrl: required('CLOVA_OCR_INVOKE_URL'),
   clovaOcrSecret: required('CLOVA_OCR_SECRET'),
+
+  // OpenAI (챗봇)
+  openaiApiKey: required('OPENAI_API_KEY'),
 };

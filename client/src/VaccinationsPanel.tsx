@@ -6,9 +6,11 @@ interface Props {
   petId: string
   petName: string
   species: 'dog' | 'cat'
+  /** 기록 추가·삭제 후 호출 — 부모가 타임라인 같은 형제 패널을 reload하기 위한 신호. */
+  onChanged?: () => void
 }
 
-export default function VaccinationsPanel({ petId, petName, species }: Props) {
+export default function VaccinationsPanel({ petId, petName, species, onChanged }: Props) {
   const [records, setRecords] = useState<VaccinationRecord[]>([])
   const [vaccines, setVaccines] = useState<Vaccine[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,6 +68,7 @@ export default function VaccinationsPanel({ petId, petName, species }: Props) {
       setDoseNo(1)
       setVaccinatedAt(today())
       await reload()
+      onChanged?.()
     } catch (err) {
       setFormError(errorMessage(err))
     } finally {
@@ -78,6 +81,7 @@ export default function VaccinationsPanel({ petId, petName, species }: Props) {
     try {
       await api.deleteVaccination(petId, id)
       await reload()
+      onChanged?.()
     } catch (err) {
       alert(errorMessage(err))
     }
@@ -159,7 +163,12 @@ export default function VaccinationsPanel({ petId, petName, species }: Props) {
       </form>
 
       {/* 접종 이력 목록 */}
-      {loading && <p>로딩 중…</p>}
+      {loading && (
+        <div className="loading-wrap">
+          <div className="loading-spinner"></div>
+          <span>로딩 중…</span>
+        </div>
+      )}
       {error && <p className="error">{error}</p>}
       {!loading && records.length === 0 && (
         <p className="vacc-empty">아직 기록된 접종이 없습니다.</p>
