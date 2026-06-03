@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { type Pet } from './api'
+import { api, errorMessage, type Pet } from './api'
 import './ChatbotPanel.css'
 
 interface Props {
@@ -19,14 +19,6 @@ const SUGGESTIONS = [
   '체중이 갑자기 늘었어요',
 ]
 
-const MOCK_RESPONSES: string[] = [
-  '네, 좋은 질문이에요! 반려동물의 건강을 위해 정기적인 검진이 중요합니다. 구체적인 증상이 있다면 수의사에게 상담을 받는 것을 권장해요.',
-  '일반적으로 초콜릿, 포도/건포도, 양파/파, 자일리톨, 마카다미아 너트, 아보카도는 개와 고양이에게 독성을 가질 수 있습니다. 성분표 스캔 기능을 이용하면 더 자세히 확인할 수 있어요.',
-  '체중 관리는 반려동물의 건강에 매우 중요해요. 체중이 급격히 변했다면 식이 조절과 함께 수의사 상담을 권장드립니다. 정기적인 체중 기록을 통해 변화를 추적해보세요.',
-  '예방접종 일정은 종류와 나이에 따라 다릅니다. 강아지의 경우 종합백신(DHPPi)과 광견병 접종이 특히 중요하며, 광견병은 법적 의무 접종이에요. 예방접종 관리 탭에서 자세한 스케줄을 확인해보세요.',
-  '반려동물의 건강 이상 신호로는 식욕 감소, 급격한 체중 변화, 과도한 음수, 기력 저하 등이 있어요. 이런 증상이 지속되면 동물병원 방문을 권장합니다.',
-]
-
 function now(): string {
   return new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
 }
@@ -43,62 +35,53 @@ export default function ChatbotPanel({ pets }: Props) {
   const selectedPet = pets.find((p) => p.id === selectedPetId)
   const petName = selectedPet?.name ?? '콩이'
 
-  const [messages, setMessages] = useState<Message[]>(() => [
-    {
-      id: 1,
-      role: 'bot',
-      text: `안녕하세요! 저는 PawCare 챗봇이에요. ${petName}에 대해 궁금한 것을 물어보세요 🐾`,
-      time: now(),
-    },
-    {
-      id: 2,
-      role: 'user',
-      text: '예방접종 스케줄 알려줘',
-      time: now(),
-    },
-    {
-      id: 3,
-      role: 'bot',
-      text: '예방접종 일정은 종류와 나이에 따라 다릅니다. 강아지의 경우 종합백신(DHPPi)과 광견병 접종이 특히 중요하며, 광견병은 법적 의무 접종이에요. 예방접종 관리 탭에서 자세한 스케줄을 확인해보세요.',
-      time: now(),
-    },
-    {
-      id: 4,
-      role: 'user',
-      text: '먹으면 안 되는 음식이 뭐가 있어?',
-      time: now(),
-    },
-    {
-      id: 5,
-      role: 'bot',
-      text: '초콜릿, 포도/건포도, 양파/파, 자일리톨, 마카다미아 너트, 아보카도는 반려동물에게 독성을 가질 수 있어요. 성분표 스캔 기능을 이용하면 구체적인 성분도 확인할 수 있답니다!',
-      time: now(),
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
 
-  // Update greeting when pet changes
+  // 펫이 바뀌면 해당 펫의 채팅 기록 로드
   useEffect(() => {
-    setMessages((prev) => {
-      const updated = [...prev]
-      if (updated[0]) {
-        updated[0] = {
-          ...updated[0],
-          text: `안녕하세요! 저는 PawCare 챗봇이에요. ${petName}에 대해 궁금한 것을 물어보세요 🐾`,
+    if (!selectedPetId || selectedPetId === 'mock') {
+      setMessages([{
+        id: 1,
+        role: 'bot',
+        text: `안녕하세요! 저는 PawCare 챗봇이에요. ${petName}에 대해 궁금한 것을 물어보세요 🐾`,
+        time: now(),
+      }])
+      return
+    }
+    let cancelled = false
+    setHistoryLoading(true)
+    api.getChatHistory(selectedPetId)
+      .then((history) => {
+        if (cancelled) return
+        if (history.length === 0) {
+          setMessages([{
+            id: ++idCounter,
+            role: 'bot',
+            text: `안녕하세요! 저는 PawCare 챗봇이에요. ${petName}에 대해 궁금한 것을 물어보세요 🐾`,
+            time: now(),
+          }])
+        } else {
+          setMessages(history.map((h) => ({
+            id: ++idCounter,
+            role: h.role === 'assistant' ? 'bot' : 'user',
+            text: h.message,
+            time: new Date(h.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+          })))
         }
-      }
-      return updated
-    })
-  }, [petName])
+      })
+      .catch(() => {
+        if (!cancelled) setMessages([])
+      })
+      .finally(() => { if (!cancelled) setHistoryLoading(false) })
+    return () => { cancelled = true }
+  }, [selectedPetId, petName])
 
-  function getMockResponse(): string {
-    return MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)]
-  }
-
-  function sendMessage(text: string) {
+  async function sendMessage(text: string) {
     if (!text.trim() || isTyping) return
 
     const userMsg: Message = {
@@ -111,17 +94,25 @@ export default function ChatbotPanel({ pets }: Props) {
     setInput('')
     setIsTyping(true)
 
-    // Simulate bot typing delay
-    setTimeout(() => {
-      const botMsg: Message = {
-        id: ++idCounter,
-        role: 'bot',
-        text: getMockResponse(),
-        time: now(),
-      }
-      setMessages((prev) => [...prev, botMsg])
+    try {
+      const { answer } = await api.sendChatMessage(selectedPetId, text.trim())
+      setMessages((prev) => [
+        ...prev,
+        { id: ++idCounter, role: 'bot', text: answer, time: now() },
+      ])
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: ++idCounter,
+          role: 'bot',
+          text: `오류가 발생했습니다: ${errorMessage(err)}`,
+          time: now(),
+        },
+      ])
+    } finally {
       setIsTyping(false)
-    }, 1200 + Math.random() * 800)
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -165,6 +156,11 @@ export default function ChatbotPanel({ pets }: Props) {
 
       {/* Messages */}
       <div className="chatbot-messages">
+        {historyLoading && (
+          <div style={{ textAlign: 'center', padding: '16px', color: '#888', fontSize: 13 }}>
+            대화 기록 불러오는 중…
+          </div>
+        )}
         {messages.map((msg) => (
           <div key={msg.id} className={`chat-msg chat-msg-${msg.role}`}>
             {msg.role === 'bot' && (

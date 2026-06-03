@@ -281,6 +281,17 @@ export const api = {
     const s = qs.toString()
     return request<TimelinePage>(`/api/pets/${petId}/timeline${s ? `?${s}` : ''}`)
   },
+
+  getChatHistory: (petId: string) =>
+    request<Array<{ id: string; role: 'user' | 'assistant'; message: string; createdAt: string }>>(
+      `/api/pets/${petId}/chat`,
+    ),
+
+  sendChatMessage: (petId: string, message: string) =>
+    request<{ answer: string }>(`/api/pets/${petId}/chat`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    }),
 }
 
 // 사용자 친화적 에러 메시지 매핑

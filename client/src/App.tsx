@@ -227,6 +227,12 @@ function Sidebar({ screen, onNavigate, userEmail, onLogout }: SidebarProps) {
 
         <div className="sidebar-section-label">분석</div>
         <button
+          className={`nav-item${screen === 'chatbot' ? ' active' : ''}`}
+          onClick={() => onNavigate('chatbot')}
+        >
+          <span className="nav-item-icon">💬</span>챗봇 상담
+        </button>
+        <button
           className={`nav-item${screen === 'timeline' ? ' active' : ''}`}
           onClick={() => onNavigate('timeline')}
         >

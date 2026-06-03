@@ -11,6 +11,7 @@ import { timelineRouter } from './modules/timeline/timeline.routes.js';
 import { runNotificationCheck } from './modules/notifications/notifications.service.js';
 import { ocrRouter } from './modules/ocr/ocr.routes.js';
 import { ingredientScansRouter } from './modules/ingredient-scans/ingredient-scans.routes.js';
+import { chatbotRouter } from './modules/chatbot/chatbot.routes.js';
 
 export function createApp() {
   const app = express();
@@ -30,6 +31,7 @@ export function createApp() {
   app.use('/api/pets/:petId/vaccinations', vaccinationsRouter);
   app.use('/api/pets/:petId/weights', weightsRouter);
   app.use('/api/pets/:petId/timeline', timelineRouter);
+  app.use('/api/pets/:petId/chat', chatbotRouter);
   app.use('/api/ocr', ocrRouter);
   app.use('/api/ingredient-scans', ingredientScansRouter);
 
