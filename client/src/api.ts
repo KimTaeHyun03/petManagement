@@ -165,6 +165,16 @@ export type TimelineEvent =
       productName: string | null
     }
 
+export interface DashboardAlert {
+  recordId: string
+  petName: string
+  vaccineName: string
+  mandatory: boolean
+  nextDueAt: string
+  daysUntil: number
+  alertType: 'd7' | 'd1' | 'dday' | 'overdue'
+}
+
 export interface TimelinePage {
   events: TimelineEvent[]
   nextBefore: string | null
@@ -292,6 +302,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ message }),
     }),
+
+  listNotifications: () => request<DashboardAlert[]>('/api/notifications'),
 }
 
 // 사용자 친화적 에러 메시지 매핑

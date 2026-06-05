@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, errorMessage, type AuthUser, type Pet } from './api'
+import { api, errorMessage, type AuthUser, type Pet, type DashboardAlert } from './api'
 import VaccinationsPanel from './VaccinationsPanel'
 import OcrPanel from './OcrPanel'
 import WeightPanel from './WeightPanel'
@@ -252,6 +252,24 @@ function Sidebar({ screen, onNavigate, userEmail, onLogout }: SidebarProps) {
    DashboardScreen
 ───────────────────────────────────────────────────────────── */
 function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Screen) => void }) {
+  const [alerts, setAlerts] = useState<DashboardAlert[]>([])
+
+  useEffect(() => {
+    api.listNotifications().then(setAlerts).catch(() => {})
+  }, [])
+
+  function alertLabel(a: DashboardAlert): string {
+    if (a.alertType === 'overdue') return `${a.petName}의 ${a.vaccineName} 접종이 ${Math.abs(a.daysUntil)}일 초과됐습니다.`
+    if (a.alertType === 'dday') return `${a.petName}의 ${a.vaccineName} 접종일입니다.`
+    return `${a.petName}의 ${a.vaccineName} 접종이 ${a.daysUntil}일 후 예정됩니다.`
+  }
+
+  function alertClass(a: DashboardAlert): string {
+    if (a.alertType === 'overdue') return 'alert-item alert-item-urgent'
+    if (a.alertType === 'dday') return 'alert-item alert-item-warning'
+    return 'alert-item alert-item-info'
+  }
+
   return (
     <div className="main-content">
       <div className="page-header">
@@ -286,7 +304,7 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
           <div className="stat-icon-wrap yellow">🔔</div>
           <div>
             <div className="stat-label">알림</div>
-            <div className="stat-value">1</div>
+            <div className="stat-value">{alerts.length}</div>
           </div>
         </div>
       </div>
@@ -382,14 +400,14 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
           <div className="card">
             <div className="card-title">알림</div>
             <div className="alert-list">
-              <div className="alert-item alert-item-warning">
-                <div className="alert-item-dot"></div>
-                <div>콩이의 광견병 접종이 7일 후 예정됩니다.</div>
-              </div>
-              <div className="alert-item alert-item-info">
-                <div className="alert-item-dot"></div>
-                <div>나비의 종합백신 접종이 완료됐습니다.</div>
-              </div>
+              {alerts.length === 0 ? (
+                <div style={{ color: '#9ca3af', fontSize: 14, padding: '8px 0' }}>예정된 알림이 없습니다.</div>
+              ) : alerts.map((a) => (
+                <div key={a.recordId} className={alertClass(a)}>
+                  <div className="alert-item-dot"></div>
+                  <div>{alertLabel(a)}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -402,14 +420,11 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
    PetsScreen
 ───────────────────────────────────────────────────────────── */
 function PetsScreen({ pets }: { pets: Pet[] }) {
-  const [selectedPetId, setSelectedPetId] = useState<string | null>(null)
-  const selectedPet = pets.find((p) => p.id === selectedPetId) ?? null
-
   return (
     <div className="main-content">
       <div className="page-header">
         <h1 className="page-title">내 반려동물</h1>
-        <p className="page-subtitle">등록된 반려동물 목록입니다. 클릭하면 예방접종 기록을 볼 수 있어요.</p>
+        <p className="page-subtitle">등록된 반려동물 목록입니다.</p>
       </div>
 
       {pets.length === 0 ? (
@@ -422,11 +437,7 @@ function PetsScreen({ pets }: { pets: Pet[] }) {
       ) : (
         <div className="pet-cards">
           {pets.map((p) => (
-            <div
-              key={p.id}
-              className={`pet-card${selectedPetId === p.id ? ' selected' : ''}`}
-              onClick={() => setSelectedPetId(selectedPetId === p.id ? null : p.id)}
-            >
+            <div key={p.id} className="pet-card">
               <div className="pet-card-avatar">
                 {p.species === 'dog' ? '🐶' : '🐱'}
               </div>
@@ -448,20 +459,8 @@ function PetsScreen({ pets }: { pets: Pet[] }) {
                   </div>
                 )}
               </div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                {selectedPetId === p.id ? '▲ 접기' : '▼ 접종 기록'}
-              </span>
             </div>
           ))}
-        </div>
-      )}
-
-      {selectedPet && (
-        <div style={{ marginTop: 20 }}>
-          <VaccinationsPanel
-            petId={selectedPet.id}
-            petName={selectedPet.name}
-          />
         </div>
       )}
     </div>
@@ -681,6 +680,7 @@ function VaccinationsScreen({ pets }: { pets: Pet[] }) {
             <VaccinationsPanel
               petId={selectedPet.id}
               petName={selectedPet.name}
+              species={selectedPet.species}
             />
           )}
         </div>
