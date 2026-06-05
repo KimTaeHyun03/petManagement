@@ -304,6 +304,9 @@ export const api = {
     }),
 
   listNotifications: () => request<DashboardAlert[]>('/api/notifications'),
+
+  deletePet: (petId: string) =>
+    request<null>(`/api/pets/${petId}`, { method: 'DELETE' }),
 }
 
 // 사용자 친화적 에러 메시지 매핑

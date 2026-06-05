@@ -632,7 +632,6 @@ textarea.field-input {
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   padding: 18px 20px;
-  cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
   display: flex;
   align-items: center;
@@ -641,6 +640,24 @@ textarea.field-input {
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 16px;
+}
+
+.pet-delete-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  transition: color 0.15s, background 0.15s;
+}
+
+.pet-delete-btn:hover {
+  color: var(--red);
+  background: var(--red-light);
 }
 
 .pet-card:hover {

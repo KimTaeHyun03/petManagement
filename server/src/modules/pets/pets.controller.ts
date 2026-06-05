@@ -20,3 +20,12 @@ export async function listMine(req: Request, res: Response, next: NextFunction) 
     next(err);
   }
 }
+
+export async function remove(req: Request, res: Response, next: NextFunction) {
+  try {
+    await petsService.deletePet(req.userId!, req.params['petId'] as string);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
