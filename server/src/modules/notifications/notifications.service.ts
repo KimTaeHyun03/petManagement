@@ -6,6 +6,58 @@
 import { pool } from '../../db/pool.js';
 import { sendMail } from './mailer.js';
 
+export interface DashboardAlert {
+  recordId: string;
+  petName: string;
+  vaccineName: string;
+  mandatory: boolean;
+  nextDueAt: string;
+  daysUntil: number;
+  alertType: 'd7' | 'd1' | 'dday' | 'overdue';
+}
+
+// 로그인 사용자의 대시보드 알림 조회 (D-7/D-1/D-day + 의무백신 기한초과)
+export async function queryUserAlerts(userId: string): Promise<DashboardAlert[]> {
+  const { rows } = await pool.query<{
+    record_id: string;
+    pet_name: string;
+    vaccine_name: string;
+    mandatory: boolean;
+    next_due_at: string;
+    days_until: number;
+  }>(
+    `SELECT
+      r.id           AS record_id,
+      p.name         AS pet_name,
+      v.name         AS vaccine_name,
+      v.mandatory,
+      r.next_due_at::text AS next_due_at,
+      (r.next_due_at - CURRENT_DATE)::int AS days_until
+    FROM vaccination_records r
+    JOIN pets    p ON p.id = r.pet_id
+    JOIN vaccines v ON v.id = r.vaccine_id
+    WHERE p.user_id = $1
+      AND r.next_due_at IS NOT NULL
+      AND (
+        (r.next_due_at - CURRENT_DATE) IN (7, 1, 0)
+        OR
+        (v.mandatory = TRUE AND r.next_due_at < CURRENT_DATE)
+      )
+    ORDER BY r.next_due_at ASC`,
+    [userId],
+  );
+
+  return rows.map((r) => ({
+    recordId: r.record_id,
+    petName: r.pet_name,
+    vaccineName: r.vaccine_name,
+    mandatory: r.mandatory,
+    nextDueAt: r.next_due_at,
+    daysUntil: r.days_until,
+    alertType: r.days_until < 0 ? 'overdue' : r.days_until === 7 ? 'd7' : r.days_until === 1 ? 'd1' : 'dday',
+  }));
+}
+
 interface DueRecord {
   record_id: string;
   user_id: string;

@@ -9,6 +9,7 @@ import { vaccinesRouter, vaccinationsRouter } from './modules/vaccinations/vacci
 import { weightsRouter } from './modules/weights/weights.routes.js';
 import { timelineRouter } from './modules/timeline/timeline.routes.js';
 import { runNotificationCheck } from './modules/notifications/notifications.service.js';
+import { notificationsRouter } from './modules/notifications/notifications.routes.js';
 import { ocrRouter } from './modules/ocr/ocr.routes.js';
 import { ingredientScansRouter } from './modules/ingredient-scans/ingredient-scans.routes.js';
 import { chatbotRouter } from './modules/chatbot/chatbot.routes.js';
@@ -34,6 +35,7 @@ export function createApp() {
   app.use('/api/pets/:petId/chat', chatbotRouter);
   app.use('/api/ocr', ocrRouter);
   app.use('/api/ingredient-scans', ingredientScansRouter);
+  app.use('/api/notifications', notificationsRouter);
 
   // 알림 수동 트리거 (개발·테스트용)
   app.post('/api/admin/notify-check', async (_req, res, next) => {
