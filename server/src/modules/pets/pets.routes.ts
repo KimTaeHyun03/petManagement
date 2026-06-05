@@ -9,3 +9,4 @@ petsRouter.use(requireAuth);
 
 petsRouter.post('/', petsController.create);
 petsRouter.get('/', petsController.listMine);
+petsRouter.delete('/:petId', petsController.remove);

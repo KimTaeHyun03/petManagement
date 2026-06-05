@@ -49,3 +49,12 @@ export async function listPetsByUser(userId: string): Promise<PetRow[]> {
   );
   return rows;
 }
+
+// user_id 검증 포함 — 다른 유저의 펫을 삭제할 수 없음
+export async function deletePetById(petId: string, userId: string): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    'DELETE FROM pets WHERE id = $1 AND user_id = $2',
+    [petId, userId],
+  );
+  return (rowCount ?? 0) > 0;
+}

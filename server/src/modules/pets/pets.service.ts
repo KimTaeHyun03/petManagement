@@ -1,5 +1,6 @@
 import type { CreatePetInput } from './pets.schema.js';
-import { insertPet, listPetsByUser, type PetRow } from './pets.repo.js';
+import { insertPet, listPetsByUser, deletePetById, type PetRow } from './pets.repo.js';
+import { HttpError } from '../../middleware/error.js';
 
 export interface PublicPet {
   id: string;
@@ -38,4 +39,9 @@ export async function createPet(
 export async function listMyPets(userId: string): Promise<PublicPet[]> {
   const rows = await listPetsByUser(userId);
   return rows.map(toPublic);
+}
+
+export async function deletePet(userId: string, petId: string): Promise<void> {
+  const deleted = await deletePetById(petId, userId);
+  if (!deleted) throw new HttpError(404, 'pet_not_found');
 }

@@ -419,7 +419,17 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
 /* ─────────────────────────────────────────────────────────────
    PetsScreen
 ───────────────────────────────────────────────────────────── */
-function PetsScreen({ pets }: { pets: Pet[] }) {
+function PetsScreen({ pets, onDeleted }: { pets: Pet[]; onDeleted: () => void }) {
+  async function handleDelete(p: Pet) {
+    if (!confirm(`${p.name}을(를) 삭제할까요?\n접종·체중·스캔 등 모든 기록이 함께 삭제됩니다.`)) return
+    try {
+      await api.deletePet(p.id)
+      onDeleted()
+    } catch (err) {
+      alert(errorMessage(err))
+    }
+  }
+
   return (
     <div className="main-content">
       <div className="page-header">
@@ -459,6 +469,14 @@ function PetsScreen({ pets }: { pets: Pet[] }) {
                   </div>
                 )}
               </div>
+              <button
+                className="pet-delete-btn"
+                type="button"
+                onClick={() => handleDelete(p)}
+                title="삭제"
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>
@@ -787,7 +805,7 @@ function App() {
       case 'dashboard':
         return <DashboardScreen pets={pets} onNavigate={setScreen} />
       case 'pets':
-        return <PetsScreen pets={pets} />
+        return <PetsScreen pets={pets} onDeleted={() => api.listPets().then(setPets).catch(() => {})} />
       case 'register':
         return (
           <RegisterScreen
