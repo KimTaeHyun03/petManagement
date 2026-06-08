@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { NavLink, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { api, errorMessage, type AuthUser, type Pet, type DashboardAlert } from './api'
 import VaccinationsPanel from './VaccinationsPanel'
 import OcrPanel from './OcrPanel'
@@ -7,7 +8,6 @@ import ChatbotPanel from './ChatbotPanel'
 import TimelinePanel from './TimelinePanel'
 import './App.css'
 
-type Screen = 'dashboard' | 'pets' | 'register' | 'ocr' | 'vaccinations' | 'weight' | 'chatbot' | 'timeline'
 type AuthMode = 'login' | 'register'
 
 /* ─────────────────────────────────────────────────────────────
@@ -170,13 +170,14 @@ function AuthPage({ onAuthenticated }: { onAuthenticated: (u: AuthUser) => void 
    Sidebar
 ───────────────────────────────────────────────────────────── */
 interface SidebarProps {
-  screen: Screen
-  onNavigate: (s: Screen) => void
   userEmail: string
   onLogout: () => void
 }
 
-function Sidebar({ screen, onNavigate, userEmail, onLogout }: SidebarProps) {
+const navClass = ({ isActive }: { isActive: boolean }) =>
+  `nav-item${isActive ? ' active' : ''}`
+
+function Sidebar({ userEmail, onLogout }: SidebarProps) {
   return (
     <nav className="sidebar">
       <div className="sidebar-logo">
@@ -186,58 +187,34 @@ function Sidebar({ screen, onNavigate, userEmail, onLogout }: SidebarProps) {
 
       <div className="sidebar-nav">
         <div className="sidebar-section-label">메인</div>
-        <button
-          className={`nav-item${screen === 'dashboard' ? ' active' : ''}`}
-          onClick={() => onNavigate('dashboard')}
-        >
+        <NavLink to="/" end className={navClass}>
           <span className="nav-item-icon">🏠</span>홈
-        </button>
-        <button
-          className={`nav-item${screen === 'pets' ? ' active' : ''}`}
-          onClick={() => onNavigate('pets')}
-        >
+        </NavLink>
+        <NavLink to="/pets" className={navClass}>
           <span className="nav-item-icon">🐾</span>내 반려동물
-        </button>
-        <button
-          className={`nav-item${screen === 'register' ? ' active' : ''}`}
-          onClick={() => onNavigate('register')}
-        >
+        </NavLink>
+        <NavLink to="/register" className={navClass}>
           <span className="nav-item-icon">➕</span>반려동물 등록
-        </button>
+        </NavLink>
 
         <div className="sidebar-section-label">기록</div>
-        <button
-          className={`nav-item${screen === 'ocr' ? ' active' : ''}`}
-          onClick={() => onNavigate('ocr')}
-        >
+        <NavLink to="/ocr" className={navClass}>
           <span className="nav-item-icon">📷</span>성분표 스캔
-        </button>
-        <button
-          className={`nav-item${screen === 'vaccinations' ? ' active' : ''}`}
-          onClick={() => onNavigate('vaccinations')}
-        >
+        </NavLink>
+        <NavLink to="/vaccinations" className={navClass}>
           <span className="nav-item-icon">💉</span>예방접종
-        </button>
-        <button
-          className={`nav-item${screen === 'weight' ? ' active' : ''}`}
-          onClick={() => onNavigate('weight')}
-        >
+        </NavLink>
+        <NavLink to="/weight" className={navClass}>
           <span className="nav-item-icon">⚖️</span>체중 관리
-        </button>
+        </NavLink>
 
         <div className="sidebar-section-label">분석</div>
-        <button
-          className={`nav-item${screen === 'chatbot' ? ' active' : ''}`}
-          onClick={() => onNavigate('chatbot')}
-        >
+        <NavLink to="/chatbot" className={navClass}>
           <span className="nav-item-icon">💬</span>챗봇 상담
-        </button>
-        <button
-          className={`nav-item${screen === 'timeline' ? ' active' : ''}`}
-          onClick={() => onNavigate('timeline')}
-        >
+        </NavLink>
+        <NavLink to="/timeline" className={navClass}>
           <span className="nav-item-icon">📋</span>통합 타임라인
-        </button>
+        </NavLink>
       </div>
 
       <div className="sidebar-footer">
@@ -251,7 +228,8 @@ function Sidebar({ screen, onNavigate, userEmail, onLogout }: SidebarProps) {
 /* ─────────────────────────────────────────────────────────────
    DashboardScreen
 ───────────────────────────────────────────────────────────── */
-function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Screen) => void }) {
+function DashboardScreen({ pets }: { pets: Pet[] }) {
+  const navigate = useNavigate()
   const [alerts, setAlerts] = useState<DashboardAlert[]>([])
 
   useEffect(() => {
@@ -317,7 +295,7 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
             <div className="card-title">내 반려동물</div>
             <div className="pet-cards">
               {pets.length > 0 ? pets.map((p) => (
-                <div key={p.id} className="pet-card" onClick={() => onNavigate('pets')}>
+                <div key={p.id} className="pet-card" onClick={() => navigate('/pets')}>
                   <div className="pet-card-avatar">
                     {p.photoUrl ? <img src={p.photoUrl} alt={p.name} /> : (p.species === 'dog' ? '🐶' : '🐱')}
                   </div>
@@ -339,7 +317,7 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
                 </div>
               )) : (
                 <>
-                  <div className="pet-card" onClick={() => onNavigate('pets')}>
+                  <div className="pet-card" onClick={() => navigate('/pets')}>
                     <div className="pet-card-avatar">🐶</div>
                     <div className="pet-card-body">
                       <div className="pet-card-name">콩이</div>
@@ -353,7 +331,7 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
                       </div>
                     </div>
                   </div>
-                  <div className="pet-card" onClick={() => onNavigate('pets')}>
+                  <div className="pet-card" onClick={() => navigate('/pets')}>
                     <div className="pet-card-avatar">🐱</div>
                     <div className="pet-card-body">
                       <div className="pet-card-name">나비</div>
@@ -366,7 +344,7 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
                   </div>
                 </>
               )}
-              <button className="pet-add-card" onClick={() => onNavigate('register')}>
+              <button className="pet-add-card" onClick={() => navigate('/register')}>
                 ➕ 반려동물 추가
               </button>
             </div>
@@ -378,19 +356,19 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
           <div className="card" style={{ marginBottom: 16 }}>
             <div className="card-title">빠른 실행</div>
             <div className="quick-actions">
-              <button className="quick-action" onClick={() => onNavigate('ocr')}>
+              <button className="quick-action" onClick={() => navigate('/ocr')}>
                 <span className="quick-action-icon">📷</span>
                 성분표 스캔
               </button>
-              <button className="quick-action" onClick={() => onNavigate('vaccinations')}>
+              <button className="quick-action" onClick={() => navigate('/vaccinations')}>
                 <span className="quick-action-icon">💉</span>
                 접종 기록
               </button>
-              <button className="quick-action" onClick={() => onNavigate('weight')}>
+              <button className="quick-action" onClick={() => navigate('/weight')}>
                 <span className="quick-action-icon">⚖️</span>
                 체중 입력
               </button>
-              <button className="quick-action" onClick={() => onNavigate('chatbot')}>
+              <button className="quick-action" onClick={() => navigate('/chatbot')}>
                 <span className="quick-action-icon">💬</span>
                 챗봇 상담
               </button>
@@ -808,9 +786,9 @@ function TimelineScreen({ pets }: { pets: Pet[] }) {
    App (root)
 ───────────────────────────────────────────────────────────── */
 function App() {
+  const navigate = useNavigate()
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loadingMe, setLoadingMe] = useState(true)
-  const [screen, setScreen] = useState<Screen>('dashboard')
   const [pets, setPets] = useState<Pet[]>([])
 
   useEffect(() => {
@@ -828,6 +806,10 @@ function App() {
     }
   }, [user])
 
+  function reloadPets() {
+    api.listPets().then(setPets).catch(() => {})
+  }
+
   async function handleLogout() {
     try {
       await api.logout()
@@ -836,7 +818,7 @@ function App() {
     }
     setUser(null)
     setPets([])
-    setScreen('dashboard')
+    navigate('/')
   }
 
   if (loadingMe) {
@@ -852,45 +834,21 @@ function App() {
     return <AuthPage onAuthenticated={(u) => setUser(u)} />
   }
 
-  function renderScreen() {
-    switch (screen) {
-      case 'dashboard':
-        return <DashboardScreen pets={pets} onNavigate={setScreen} />
-      case 'pets':
-        return <PetsScreen pets={pets} onDeleted={() => api.listPets().then(setPets).catch(() => {})} />
-      case 'register':
-        return (
-          <RegisterScreen
-            onRegistered={() => {
-              api.listPets().then(setPets).catch(() => {})
-            }}
-          />
-        )
-      case 'ocr':
-        return <OcrScreen pets={pets} />
-      case 'vaccinations':
-        return <VaccinationsScreen pets={pets} />
-      case 'weight':
-        return <WeightScreen pets={pets} />
-      case 'chatbot':
-        return <ChatbotScreen pets={pets} />
-      case 'timeline':
-        return <TimelineScreen pets={pets} />
-      default:
-        return <DashboardScreen pets={pets} onNavigate={setScreen} />
-    }
-  }
-
   return (
     <div className="app-shell">
-      <Sidebar
-        screen={screen}
-        onNavigate={setScreen}
-        userEmail={user.email}
-        onLogout={handleLogout}
-      />
+      <Sidebar userEmail={user.email} onLogout={handleLogout} />
       <div className="main-area">
-        {renderScreen()}
+        <Routes>
+          <Route path="/" element={<DashboardScreen pets={pets} />} />
+          <Route path="/pets" element={<PetsScreen pets={pets} onDeleted={reloadPets} />} />
+          <Route path="/register" element={<RegisterScreen onRegistered={reloadPets} />} />
+          <Route path="/ocr" element={<OcrScreen pets={pets} />} />
+          <Route path="/vaccinations" element={<VaccinationsScreen pets={pets} />} />
+          <Route path="/weight" element={<WeightScreen pets={pets} />} />
+          <Route path="/chatbot" element={<ChatbotScreen pets={pets} />} />
+          <Route path="/timeline" element={<TimelineScreen pets={pets} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
     </div>
   )
