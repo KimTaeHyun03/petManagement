@@ -231,10 +231,52 @@ function Sidebar({ userEmail, onLogout }: SidebarProps) {
 function DashboardScreen({ pets }: { pets: Pet[] }) {
   const navigate = useNavigate()
   const [alerts, setAlerts] = useState<DashboardAlert[]>([])
+  const [vaccThisMonth, setVaccThisMonth] = useState(0)
+  const [scanCount, setScanCount] = useState(0)
 
   useEffect(() => {
     api.listNotifications().then(setAlerts).catch(() => {})
   }, [])
+
+  // 대시보드 통계는 실제 데이터에서 집계 (펫별 API 합산).
+  // 펫이 없으면 모두 0 — 신규 계정엔 더미 없이 빈 상태가 보이도록.
+  useEffect(() => {
+    if (pets.length === 0) {
+      setVaccThisMonth(0)
+      setScanCount(0)
+      return
+    }
+    let cancelled = false
+
+    // 이번 달 접종 횟수
+    Promise.all(pets.map((p) => api.listVaccinations(p.id).catch(() => [])))
+      .then((lists) => {
+        if (cancelled) return
+        const now = new Date()
+        const y = now.getFullYear()
+        const m = now.getMonth()
+        const count = lists.flat().filter((v) => {
+          const d = new Date(v.vaccinatedAt)
+          return d.getFullYear() === y && d.getMonth() === m
+        }).length
+        setVaccThisMonth(count)
+      })
+      .catch(() => { if (!cancelled) setVaccThisMonth(0) })
+
+    // 스캔 횟수 (타임라인의 성분표 스캔 이벤트 집계)
+    Promise.all(pets.map((p) => api.getTimeline(p.id, { limit: 100 }).catch(() => null)))
+      .then((pages) => {
+        if (cancelled) return
+        const count = pages.reduce(
+          (sum, pg) => sum + (pg?.events.filter((e) => e.type === 'ingredient_scan').length ?? 0),
+          0,
+        )
+        setScanCount(count)
+      })
+      .catch(() => { if (!cancelled) setScanCount(0) })
+
+    return () => { cancelled = true }
+  }, [pets])
 
   function alertLabel(a: DashboardAlert): string {
     if (a.alertType === 'overdue') return `${a.petName}의 ${a.vaccineName} 접종이 ${Math.abs(a.daysUntil)}일 초과됐습니다.`
@@ -261,21 +303,21 @@ function DashboardScreen({ pets }: { pets: Pet[] }) {
           <div className="stat-icon-wrap">🐾</div>
           <div>
             <div className="stat-label">총 반려동물</div>
-            <div className="stat-value">{pets.length || 2}</div>
+            <div className="stat-value">{pets.length}</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon-wrap amber">💉</div>
           <div>
             <div className="stat-label">이번 달 접종</div>
-            <div className="stat-value">3</div>
+            <div className="stat-value">{vaccThisMonth}</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon-wrap">📷</div>
           <div>
             <div className="stat-label">스캔 횟수</div>
-            <div className="stat-value">8</div>
+            <div className="stat-value">{scanCount}</div>
           </div>
         </div>
         <div className="stat-card">
@@ -294,7 +336,7 @@ function DashboardScreen({ pets }: { pets: Pet[] }) {
           <div className="card">
             <div className="card-title">내 반려동물</div>
             <div className="pet-cards">
-              {pets.length > 0 ? pets.map((p) => (
+              {pets.map((p) => (
                 <div key={p.id} className="pet-card" onClick={() => navigate('/pets')}>
                   <div className="pet-card-avatar">
                     {p.photoUrl ? <img src={p.photoUrl} alt={p.name} /> : (p.species === 'dog' ? '🐶' : '🐱')}
@@ -315,35 +357,7 @@ function DashboardScreen({ pets }: { pets: Pet[] }) {
                     )}
                   </div>
                 </div>
-              )) : (
-                <>
-                  <div className="pet-card" onClick={() => navigate('/pets')}>
-                    <div className="pet-card-avatar">🐶</div>
-                    <div className="pet-card-body">
-                      <div className="pet-card-name">콩이</div>
-                      <div className="pet-card-meta">
-                        <span className="badge badge-neutral">강아지</span>
-                        <span>말티즈</span>
-                        <span>2021-03-15</span>
-                      </div>
-                      <div className="pet-card-badges">
-                        <span className="chip">닭고기</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="pet-card" onClick={() => navigate('/pets')}>
-                    <div className="pet-card-avatar">🐱</div>
-                    <div className="pet-card-body">
-                      <div className="pet-card-name">나비</div>
-                      <div className="pet-card-meta">
-                        <span className="badge badge-neutral">고양이</span>
-                        <span>코리안숏헤어</span>
-                        <span>2020-07-22</span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
+              ))}
               <button className="pet-add-card" onClick={() => navigate('/register')}>
                 ➕ 반려동물 추가
               </button>
