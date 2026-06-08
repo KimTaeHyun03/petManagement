@@ -45,7 +45,8 @@ export const env = {
   awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
 };
 
-// S3 자격증명이 모두 채워졌을 때만 업로드를 시도한다.
-export const s3Enabled = Boolean(
-  env.awsRegion && env.s3Bucket && env.awsAccessKeyId && env.awsSecretAccessKey,
-);
+// region + bucket만 있으면 업로드 활성화.
+// 자격증명은 SDK가 자동 해결한다:
+//   (1) .env의 AWS_ACCESS_KEY_ID/SECRET (로컬 개발) 또는
+//   (2) EC2 인스턴스에 연결된 IAM Role (배포 환경)
+export const s3Enabled = Boolean(env.awsRegion && env.s3Bucket);

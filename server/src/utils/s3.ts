@@ -4,13 +4,20 @@ import { env, s3Enabled } from '../config/env.js';
 import { HttpError } from '../middleware/error.js';
 
 // s3Enabled일 때만 클라이언트를 생성한다 (미설정 환경에서 부팅 실패 방지).
+// 키가 .env에 있으면 명시적으로 사용하고(로컬 개발), 없으면 credentials를 생략해
+// SDK 기본 자격증명 체인이 EC2 인스턴스 IAM Role을 자동으로 사용하도록 둔다.
+const hasExplicitKeys = Boolean(env.awsAccessKeyId && env.awsSecretAccessKey);
 const client = s3Enabled
   ? new S3Client({
       region: env.awsRegion,
-      credentials: {
-        accessKeyId: env.awsAccessKeyId,
-        secretAccessKey: env.awsSecretAccessKey,
-      },
+      ...(hasExplicitKeys
+        ? {
+            credentials: {
+              accessKeyId: env.awsAccessKeyId,
+              secretAccessKey: env.awsSecretAccessKey,
+            },
+          }
+        : {}),
     })
   : null;
 
