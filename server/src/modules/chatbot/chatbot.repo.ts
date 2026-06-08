@@ -9,6 +9,14 @@ export interface PetContext {
   recentWeights: Array<{ weight: number; recordedAt: string }>;
   upcomingVaccinations: Array<{ name: string; dueAt: string }>;
   recentScans: Array<{ productName: string | null; matchedFoods: string[]; scannedAt: string }>;
+  vaccineSchedule: Array<{
+    name: string;
+    recommendWeeks: number | null;
+    doseTotal: number;
+    intervalWeeks: number | null;
+    boosterWeeks: number | null;
+    mandatory: boolean;
+  }>;
 }
 
 export async function loadPetContext(petId: string, userId: string): Promise<PetContext | null> {
@@ -44,6 +52,22 @@ export async function loadPetContext(petId: string, userId: string): Promise<Pet
     [petId],
   );
 
+  // 해당 종의 표준 예방접종 일정 마스터 (일반 스케줄 질문에 DB 근거를 제공)
+  const { rows: vaccineMasterRows } = await pool.query<{
+    name: string;
+    recommend_weeks: number | null;
+    dose_total: number;
+    interval_weeks: number | null;
+    booster_weeks: number | null;
+    mandatory: boolean;
+  }>(
+    `SELECT DISTINCT name, recommend_weeks, dose_total, interval_weeks, booster_weeks, mandatory
+       FROM vaccines
+      WHERE species = $1 OR species = 'both'
+      ORDER BY mandatory DESC, recommend_weeks ASC`,
+    [pet.species],
+  );
+
   return {
     name: pet.name,
     species: pet.species,
@@ -59,6 +83,14 @@ export async function loadPetContext(petId: string, userId: string): Promise<Pet
       productName: r.product_name,
       matchedFoods: (r.matched_foods_json ?? []).map((f) => f.name),
       scannedAt: r.scanned_at.toISOString(),
+    })),
+    vaccineSchedule: vaccineMasterRows.map((r) => ({
+      name: r.name,
+      recommendWeeks: r.recommend_weeks,
+      doseTotal: r.dose_total,
+      intervalWeeks: r.interval_weeks,
+      boosterWeeks: r.booster_weeks,
+      mandatory: r.mandatory,
     })),
   };
 }
