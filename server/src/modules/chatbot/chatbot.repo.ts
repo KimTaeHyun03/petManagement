@@ -31,7 +31,7 @@ export async function loadPetContext(petId: string, userId: string): Promise<Pet
   const pet = petRows[0];
 
   const { rows: weightRows } = await pool.query<{ weight: string; recorded_at: Date }>(
-    'SELECT weight, recorded_at FROM weight_records WHERE pet_id = $1 ORDER BY recorded_at DESC LIMIT 5',
+    'SELECT weight, recorded_at FROM weight_records WHERE pet_id = $1 ORDER BY recorded_at DESC LIMIT 10',
     [petId],
   );
 
