@@ -101,6 +101,7 @@
 **등록 항목**:
 - 기본 정보: 이름, 종(강아지/고양이), 품종, 생년월일, 성별, 중성화 여부
 - 초기 건강 정보: 현재 체중(선택), **알러지 목록** (예: 닭고기, 감자, 소고기 …)
+- 프로필 사진(선택): 파일 업로드(jpg·png·webp, 5MB 이하). 원본은 S3 보관, DB에는 접근 URL(`photo_url`)만 저장. 미업로드 시 UI는 종별 기본 이모지로 대체.
 
 **동작**:
 - 한 계정에서 다수 등록 가능, 펫 전환 UI 제공
@@ -237,7 +238,7 @@ ChatLog 저장 + 사용자에게 노출
 ```
 User(사용자 정보) (id, email, pw_hash, created_at)
   │
-  └── Pet(펫 정보) (id, user_id, name, species, breed, birth, gender, neutered, allergies_json)
+  └── Pet(펫 정보) (id, user_id, name, species, breed, birth, gender, neutered, allergies_json, photo_url)
          │
          ├── WeightRecord(몸무게)       (id, pet_id, weight, recorded_at, memo)
          ├── VaccinationRecord(예방접종)  (id, pet_id, vaccine_id, dose_no, vaccinated_at, source: manual|ocr)

@@ -11,19 +11,21 @@ export interface PetRow {
   gender: 'M' | 'F' | null;
   neutered: boolean;
   allergies_json: string[];
+  photo_url: string | null;
   created_at: Date;
 }
 
 const SELECT_COLS =
-  'id, user_id, name, species, breed, birth::text AS birth, gender, neutered, allergies_json, created_at';
+  'id, user_id, name, species, breed, birth::text AS birth, gender, neutered, allergies_json, photo_url, created_at';
 
 export async function insertPet(
   userId: string,
   input: CreatePetInput,
+  photoUrl: string | null = null,
 ): Promise<PetRow> {
   const { rows } = await pool.query<PetRow>(
-    `INSERT INTO pets (user_id, name, species, breed, birth, gender, neutered, allergies_json)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
+    `INSERT INTO pets (user_id, name, species, breed, birth, gender, neutered, allergies_json, photo_url)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)
      RETURNING ${SELECT_COLS}`,
     [
       userId,
@@ -34,6 +36,7 @@ export async function insertPet(
       input.gender ?? null,
       input.neutered,
       JSON.stringify(input.allergies),
+      photoUrl,
     ],
   );
   return rows[0]!;

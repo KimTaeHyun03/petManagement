@@ -36,4 +36,16 @@ export const env = {
 
   // OpenAI (챗봇)
   openaiApiKey: required('OPENAI_API_KEY'),
+
+  // AWS S3 (반려동물 프로필 사진 등 이미지 저장 — PLAN §7)
+  // 미설정 시 사진 업로드 기능만 비활성화되고 펫 등록 자체는 정상 동작한다(SMTP와 동일 정책).
+  awsRegion: process.env.AWS_REGION ?? '',
+  s3Bucket: process.env.AWS_S3_BUCKET ?? '',
+  awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
+  awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? '',
 };
+
+// S3 자격증명이 모두 채워졌을 때만 업로드를 시도한다.
+export const s3Enabled = Boolean(
+  env.awsRegion && env.s3Bucket && env.awsAccessKeyId && env.awsSecretAccessKey,
+);

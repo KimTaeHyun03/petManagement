@@ -14,10 +14,26 @@ export const CreatePetSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'birth_must_be_yyyy_mm_dd')
     .optional(),
   gender: z.enum(['M', 'F']).optional(),
-  neutered: z.boolean().optional().default(false),
+  // multipart/form-data로 오면 "true"/"false" 문자열, JSON으로 오면 boolean — 양쪽 모두 수용.
+  // (주의: z.coerce.boolean()은 "false"도 true로 만들므로 사용하면 안 됨)
+  neutered: z
+    .preprocess(
+      (v) => (typeof v === 'string' ? v === 'true' : v),
+      z.boolean(),
+    )
+    .optional()
+    .default(false),
+  // multipart에서는 JSON 문자열('["닭고기"]')로, JSON 요청에서는 배열로 들어온다.
   allergies: z
-    .array(z.string().trim().min(1).max(40))
-    .max(50)
+    .preprocess((v) => {
+      if (typeof v !== 'string') return v;
+      if (v.trim() === '') return [];
+      try {
+        return JSON.parse(v);
+      } catch {
+        return v; // 파싱 실패 시 원본 유지 → 아래 array 검증에서 거부
+      }
+    }, z.array(z.string().trim().min(1).max(40)).max(50))
     .optional()
     .default([]),
 });

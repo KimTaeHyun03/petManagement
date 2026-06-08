@@ -11,6 +11,7 @@ export interface PublicPet {
   gender: 'M' | 'F' | null;
   neutered: boolean;
   allergies: string[];
+  photoUrl: string | null;
   createdAt: string;
 }
 
@@ -24,6 +25,7 @@ function toPublic(row: PetRow): PublicPet {
     gender: row.gender,
     neutered: row.neutered,
     allergies: row.allergies_json ?? [],
+    photoUrl: row.photo_url,
     createdAt: row.created_at.toISOString(),
   };
 }
@@ -31,8 +33,9 @@ function toPublic(row: PetRow): PublicPet {
 export async function createPet(
   userId: string,
   input: CreatePetInput,
+  photoUrl: string | null = null,
 ): Promise<PublicPet> {
-  const row = await insertPet(userId, input);
+  const row = await insertPet(userId, input, photoUrl);
   return toPublic(row);
 }
 

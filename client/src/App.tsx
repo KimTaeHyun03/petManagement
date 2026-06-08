@@ -319,7 +319,7 @@ function DashboardScreen({ pets, onNavigate }: { pets: Pet[]; onNavigate: (s: Sc
               {pets.length > 0 ? pets.map((p) => (
                 <div key={p.id} className="pet-card" onClick={() => onNavigate('pets')}>
                   <div className="pet-card-avatar">
-                    {p.species === 'dog' ? '🐶' : '🐱'}
+                    {p.photoUrl ? <img src={p.photoUrl} alt={p.name} /> : (p.species === 'dog' ? '🐶' : '🐱')}
                   </div>
                   <div className="pet-card-body">
                     <div className="pet-card-name">{p.name}</div>
@@ -449,7 +449,7 @@ function PetsScreen({ pets, onDeleted }: { pets: Pet[]; onDeleted: () => void })
           {pets.map((p) => (
             <div key={p.id} className="pet-card">
               <div className="pet-card-avatar">
-                {p.species === 'dog' ? '🐶' : '🐱'}
+                {p.photoUrl ? <img src={p.photoUrl} alt={p.name} /> : (p.species === 'dog' ? '🐶' : '🐱')}
               </div>
               <div className="pet-card-body">
                 <div className="pet-card-name">{p.name}</div>
@@ -496,9 +496,31 @@ function RegisterScreen({ onRegistered }: { onRegistered: () => void }) {
   const [gender, setGender] = useState<'' | 'M' | 'F'>('')
   const [neutered, setNeutered] = useState(false)
   const [allergiesText, setAllergiesText] = useState('')
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setError(null)
+    if (file && file.size > 5 * 1024 * 1024) {
+      setError('사진 용량은 5MB 이하만 가능합니다.')
+      e.target.value = ''
+      return
+    }
+    // 이전 미리보기 URL 정리 (메모리 누수 방지)
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    setPhoto(file)
+    setPhotoPreview(file ? URL.createObjectURL(file) : null)
+  }
+
+  function clearPhoto() {
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    setPhoto(null)
+    setPhotoPreview(null)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -515,8 +537,10 @@ function RegisterScreen({ onRegistered }: { onRegistered: () => void }) {
         gender: gender || undefined,
         neutered,
         allergies,
+        photo,
       })
       setName(''); setBreed(''); setBirth(''); setGender(''); setNeutered(false); setAllergiesText('')
+      clearPhoto()
       setSuccess(`${name}이(가) 등록됐습니다!`)
       onRegistered()
     } catch (err) {
@@ -620,6 +644,34 @@ function RegisterScreen({ onRegistered }: { onRegistered: () => void }) {
                 onChange={(e) => setAllergiesText(e.target.value)}
                 placeholder="닭고기, 감자"
               />
+            </div>
+
+            <div className="field pet-form-full">
+              <label className="field-label" htmlFor="pet-photo">
+                사진 <small>(선택, jpg·png·webp, 5MB 이하)</small>
+              </label>
+              <div className="pet-photo-field">
+                {photoPreview ? (
+                  <div className="pet-photo-preview">
+                    <img src={photoPreview} alt="미리보기" />
+                    <button type="button" className="pet-photo-remove" onClick={clearPhoto}>
+                      ✕ 사진 제거
+                    </button>
+                  </div>
+                ) : (
+                  <label htmlFor="pet-photo" className="pet-photo-dropzone">
+                    <span className="pet-photo-dropzone-icon">🖼</span>
+                    <span>클릭해서 사진 파일 선택</span>
+                  </label>
+                )}
+                <input
+                  id="pet-photo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handlePhotoChange}
+                  hidden
+                />
+              </div>
             </div>
           </div>
 

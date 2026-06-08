@@ -46,6 +46,7 @@ export interface Pet {
   gender: 'M' | 'F' | null
   neutered: boolean
   allergies: string[]
+  photoUrl: string | null
   createdAt: string
 }
 
@@ -217,6 +218,8 @@ export const api = {
 
   listPets: () => request<Pet[]>('/api/pets'),
 
+  // multipart 전송 — 선택 사진(photo)을 함께 보낼 수 있음.
+  // 서버 zod 스키마가 문자열 필드를 처리하므로 boolean/배열은 문자열로 직렬화한다.
   createPet: (input: {
     name: string
     species: 'dog' | 'cat'
@@ -225,11 +228,19 @@ export const api = {
     gender?: 'M' | 'F'
     neutered?: boolean
     allergies?: string[]
-  }) =>
-    request<Pet>('/api/pets', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
+    photo?: File | null
+  }) => {
+    const form = new FormData()
+    form.append('name', input.name)
+    form.append('species', input.species)
+    if (input.breed) form.append('breed', input.breed)
+    if (input.birth) form.append('birth', input.birth)
+    if (input.gender) form.append('gender', input.gender)
+    form.append('neutered', String(input.neutered ?? false))
+    form.append('allergies', JSON.stringify(input.allergies ?? []))
+    if (input.photo) form.append('photo', input.photo)
+    return upload<Pet>('/api/pets', form)
+  },
 
   listVaccines: (species: 'dog' | 'cat') =>
     request<Vaccine[]>(`/api/vaccines?species=${species}`),
