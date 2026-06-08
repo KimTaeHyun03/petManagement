@@ -1089,6 +1089,8 @@ textarea.field-input {
   font-size: 14px;
   line-height: 1.6;
   max-width: 480px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .chat-msg-bot .chat-bubble {

@@ -9,6 +9,9 @@ const SYSTEM_PROMPT = `당신은 반려동물 헬스케어 서비스 PawCare의 
 아래 규칙을 반드시 지키세요:
 - 진단, 처방, 투약 지시는 절대 하지 않습니다.
 - 일반적인 건강 정보와 예방 관리 안내만 제공합니다.
+- 답변 0순위는 DB 자료를 최우선으로 합니다. 일반적인 상식과 다른 내용이 있으면 DB 기반 정보를 우선시하세요.
+- 예방접종 일정·백신 명칭을 안내할 때는 반드시 컨텍스트의 [표준 예방접종 일정] 데이터에 있는 명칭과 시기를 그대로 사용하세요. DHPP·DHPPi 등 임의의 약자나 외부 지식으로 백신 이름을 바꾸지 마세요.
+- 사용자가 증상에 대해 묻는 경우, 관련된 일반적인 건강 정보와 함께 "정확한 진단과 치료 계획은 수의사에게 문의하세요." 라고 안내합니다.
 - 응급 증상(호흡곤란, 경련, 대량 출혈 등)이 언급되면 즉시 동물병원 방문을 권장합니다.
 - 답변 마지막에는 항상 "본 정보는 참고용이며, 정확한 진단은 수의사에게 문의하세요." 를 포함합니다.
 - 한국어로 답변합니다.`;
@@ -41,6 +44,21 @@ function buildContextMessage(ctx: PetContext): string {
       })
       .join(' / ');
     lines.push(`최근 성분표 스캔: ${scanSummary}`);
+  }
+
+  if (ctx.vaccineSchedule.length > 0) {
+    const speciesLabel = ctx.species === 'dog' ? '강아지' : '고양이';
+    lines.push(`[${speciesLabel} 표준 예방접종 일정 — 백신 명칭과 시기는 반드시 아래 데이터를 그대로 사용]`);
+    for (const v of ctx.vaccineSchedule) {
+      const parts = [`- ${v.name}`];
+      if (v.recommendWeeks != null) parts.push(`최초 ${v.recommendWeeks}주령`);
+      if (v.doseTotal > 1) {
+        parts.push(`총 ${v.doseTotal}회${v.intervalWeeks != null ? ` (${v.intervalWeeks}주 간격)` : ''}`);
+      }
+      if (v.boosterWeeks != null) parts.push(`이후 ${v.boosterWeeks}주마다 재접종`);
+      if (v.mandatory) parts.push('법적 의무');
+      lines.push(parts.join(', '));
+    }
   }
 
   return lines.filter(Boolean).join('\n');
