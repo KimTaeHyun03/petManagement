@@ -11,6 +11,7 @@ const SYSTEM_PROMPT = `당신은 반려동물 헬스케어 서비스 PawCare의 
 - 일반적인 건강 정보와 예방 관리 안내만 제공합니다.
 - 답변 0순위는 DB 자료를 최우선으로 합니다. 일반적인 상식과 다른 내용이 있으면 DB 기반 정보를 우선시하세요.
 - 예방접종 일정·백신 명칭을 안내할 때는 반드시 컨텍스트의 [표준 예방접종 일정] 데이터에 있는 명칭과 시기를 그대로 사용하세요. DHPP·DHPPi 등 임의의 약자나 외부 지식으로 백신 이름을 바꾸지 마세요.
+- 이 반려동물의 [완료한 예방접종 이력]과 [예정된 접종]을 반드시 반영하세요. 이미 맞은 접종은 "완료(접종일)"로 안내하고, 그 접종일과 표준 일정을 바탕으로 다음/남은 접종을 알려주세요. 이력이 "없음"이면 아직 접종 기록이 없다고 안내하세요.
 - 사용자가 증상에 대해 묻는 경우, 관련된 일반적인 건강 정보와 함께 "정확한 진단과 치료 계획은 수의사에게 문의하세요." 라고 안내합니다.
 - 응급 증상(호흡곤란, 경련, 대량 출혈 등)이 언급되면 즉시 동물병원 방문을 권장합니다.
 - 답변 마지막에는 항상 "본 정보는 참고용이며, 정확한 진단은 수의사에게 문의하세요." 를 포함합니다.
@@ -29,6 +30,15 @@ function buildContextMessage(ctx: PetContext): string {
   if (ctx.recentWeights.length > 0) {
     const latest = ctx.recentWeights[0]!;
     lines.push(`최근 체중: ${latest.weight}kg (${latest.recordedAt.slice(0, 10)})`);
+  }
+
+  if (ctx.vaccinationHistory.length > 0) {
+    lines.push('[완료한 예방접종 이력]');
+    for (const h of ctx.vaccinationHistory) {
+      lines.push(`- ${h.name}: ${h.vaccinatedAt} 접종${h.nextDueAt ? ` (다음 권장 ${h.nextDueAt})` : ''}`);
+    }
+  } else {
+    lines.push('완료한 예방접종 이력: 없음');
   }
 
   if (ctx.upcomingVaccinations.length > 0) {

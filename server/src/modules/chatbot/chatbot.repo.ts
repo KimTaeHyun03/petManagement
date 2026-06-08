@@ -8,6 +8,7 @@ export interface PetContext {
   allergies: string[];
   recentWeights: Array<{ weight: number; recordedAt: string }>;
   upcomingVaccinations: Array<{ name: string; dueAt: string }>;
+  vaccinationHistory: Array<{ name: string; vaccinatedAt: string; nextDueAt: string | null }>;
   recentScans: Array<{ productName: string | null; matchedFoods: string[]; scannedAt: string }>;
   vaccineSchedule: Array<{
     name: string;
@@ -40,6 +41,19 @@ export async function loadPetContext(petId: string, userId: string): Promise<Pet
      JOIN vaccines v ON v.id = r.vaccine_id
      WHERE r.pet_id = $1 AND r.next_due_at IS NOT NULL AND r.next_due_at >= CURRENT_DATE
      ORDER BY r.next_due_at ASC LIMIT 5`,
+    [petId],
+  );
+
+  // 완료한 접종 이력 (이미 맞춘 기록 — 챗봇이 "무엇을 접종했는지" 알 수 있도록)
+  const { rows: vacHistRows } = await pool.query<{
+    name: string; vaccinated_at: string; next_due_at: string | null;
+  }>(
+    `SELECT v.name, r.vaccinated_at::text, r.next_due_at::text
+     FROM vaccination_records r
+     JOIN vaccines v ON v.id = r.vaccine_id
+     WHERE r.pet_id = $1
+     ORDER BY r.vaccinated_at DESC, r.created_at DESC
+     LIMIT 10`,
     [petId],
   );
 
@@ -79,6 +93,11 @@ export async function loadPetContext(petId: string, userId: string): Promise<Pet
       recordedAt: r.recorded_at.toISOString(),
     })),
     upcomingVaccinations: vacRows.map((r) => ({ name: r.name, dueAt: r.next_due_at })),
+    vaccinationHistory: vacHistRows.map((r) => ({
+      name: r.name,
+      vaccinatedAt: r.vaccinated_at,
+      nextDueAt: r.next_due_at,
+    })),
     recentScans: scanRows.map((r) => ({
       productName: r.product_name,
       matchedFoods: (r.matched_foods_json ?? []).map((f) => f.name),
