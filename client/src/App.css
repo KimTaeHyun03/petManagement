@@ -82,7 +82,9 @@
   background: none;
   border: none;
   width: 100%;
+  box-sizing: border-box;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   border-radius: 0;
