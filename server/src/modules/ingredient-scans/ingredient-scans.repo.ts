@@ -12,17 +12,19 @@ export interface IngredientScanRow {
   scanned_at:             Date;
 }
 
-// 성분표 스캔 결과 저장 (사용자 확정 후에만 호출)
+// 성분표 스캔 결과 저장 (사용자 확정 후에만 호출). imageUrl은 선택 — 없으면 NULL.
 export async function insertIngredientScan(
   input: ConfirmScanInput,
+  imageUrl: string | null = null,
 ): Promise<IngredientScanRow> {
   const { rows } = await pool.query<IngredientScanRow>(
     `INSERT INTO ingredient_scans
-       (pet_id, extracted_text, matched_foods_json, matched_allergies_json, product_name)
-     VALUES ($1, $2, $3::jsonb, $4::jsonb, $5)
+       (pet_id, image_url, extracted_text, matched_foods_json, matched_allergies_json, product_name)
+     VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6)
      RETURNING *`,
     [
       input.petId,
+      imageUrl,
       input.extractedText,
       JSON.stringify(input.matchedFoodsJson),
       JSON.stringify(input.matchedAllergiesJson),

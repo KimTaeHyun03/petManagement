@@ -25,6 +25,7 @@ export interface MatchResult {
 export interface PublicScan {
   id:                   string;
   petId:                string;
+  imageUrl:             string | null;
   extractedText:        string;
   matchedFoods:         MatchedFood[];
   matchedAllergies:     string[];
@@ -73,9 +74,10 @@ export async function matchIngredients(
 export async function confirmScan(
   input: ConfirmScanInput,
   userId: string,
+  imageUrl: string | null = null,
 ): Promise<PublicScan> {
   await assertPetOwnership(input.petId, userId);
-  const row = await insertIngredientScan(input);
+  const row = await insertIngredientScan(input, imageUrl);
   return toPublic(row);
 }
 
@@ -113,6 +115,7 @@ function toPublic(row: IngredientScanRow): PublicScan {
   return {
     id:               row.id,
     petId:            row.pet_id,
+    imageUrl:         row.image_url,
     extractedText:    row.extracted_text,
     matchedFoods:     row.matched_foods_json as MatchedFood[],
     matchedAllergies: row.matched_allergies_json as string[],

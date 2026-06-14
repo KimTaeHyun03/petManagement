@@ -79,6 +79,7 @@ export default function OcrPanel({ pets, onChanged }: Props) {
         matchedFoodsJson:     result.matches?.dangerFoods ?? [],
         matchedAllergiesJson: result.matches?.allergies ?? [],
         productName:          productName.trim() || null,
+        image:                file,
       })
       setSaved(true)
       onChanged?.()

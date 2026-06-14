@@ -26,6 +26,9 @@ const EXT_BY_MIME: Record<string, string> = {
   'image/jpg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
+  // 성분표 OCR은 bmp/tiff도 받으므로 confirm 업로드 시 확장자를 보존한다.
+  'image/bmp': 'bmp',
+  'image/tiff': 'tiff',
 };
 
 /**

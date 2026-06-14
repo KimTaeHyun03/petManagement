@@ -101,6 +101,7 @@ export interface ScanResult {
 export interface IngredientScan {
   id: string
   petId: string
+  imageUrl: string | null
   extractedText: string
   matchedFoods: MatchedFood[]
   matchedAllergies: string[]
@@ -267,18 +268,24 @@ export const api = {
     return upload<ScanResult>(`/api/ocr/scan?petId=${petId}`, form)
   },
 
-  // 스캔 결과 확정 저장
+  // 스캔 결과 확정 저장 — 원본 성분표 이미지를 함께 보내 S3에 보관한다(multipart).
   confirmScan: (input: {
     petId: string
     extractedText: string
     matchedFoodsJson: MatchedFood[]
     matchedAllergiesJson: string[]
     productName?: string | null
-  }) =>
-    request<IngredientScan>('/api/ingredient-scans/confirm', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
+    image?: File | null
+  }) => {
+    const form = new FormData()
+    form.append('petId', input.petId)
+    form.append('extractedText', input.extractedText)
+    form.append('matchedFoodsJson', JSON.stringify(input.matchedFoodsJson))
+    form.append('matchedAllergiesJson', JSON.stringify(input.matchedAllergiesJson))
+    if (input.productName) form.append('productName', input.productName)
+    if (input.image) form.append('image', input.image)
+    return upload<IngredientScan>('/api/ingredient-scans/confirm', form)
+  },
 
   listWeights: (petId: string) =>
     request<WeightRecord[]>(`/api/pets/${petId}/weights`),
