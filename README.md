@@ -1,36 +1,37 @@
-# 반려동물 헬스케어 — 팀 자료 모음
+# Paw Care
 
 > 강아지·고양이 보호자가 일상 데이터(체중·음식·접종·증상)를 기록해서
 > 병원 가기 전에 미리 위험을 알아챌 수 있게 도와주는 **웹 서비스** 프로젝트.
 
 **팀**: 김태현(총괄) · 김기연 · 장윤서 · 김찬영
 **개발 기간**: 6주
+---
+## Screenshot
+![화면](screenshot.gif)
 
 ---
 ## 접속
+
+**[PawCare](http://43.200.191.1:5173/)**
 ```
 http://43.200.191.1:5173/
 ```
----
 
-## 이 폴더에 뭐가 있나
+---
+## 주요기능
+
+
+
+---
+## 주요 파일
 
 | 파일 | 무슨 내용 | 언제 보면 되나 |
 |---|---|---|
-| **`function.md`** | 누가 어떤 기능을 만들고, 어떤 자료조사를 할지 | **제일 먼저** 본인 할 일 확인 |
-| **`PLAN.md`** | 시스템 설계, 화면 구성, DB 구조, 기능별 상세 명세 | 구현하다 막힐 때 참조 |
-| **`RESEARCH.md`** | 왜 이 기능을 만드는지 배경 조사 | 처음에 프로젝트 이해할 때 |
-| **`TODO.md`** | 6주 일정 초안 + 주차별 할 일 | 회의에서 확정한 뒤 활용 |
-| **`/research`** | 자료조사 내용 | 자료조사 |
-
----
-
-## 읽는 순서 (추천)
-
-1. **`RESEARCH.md`** — 우리가 왜 이걸 만드는지 (5분)
-2. **`function.md`** — 본인이 뭘 할지 (5분)
-3. **`PLAN.md`** — 본인 담당 기능 절(4.x) + DB 구조(5절)만 (필요할 때)
-4. **`TODO.md`** — 회의에서 일정 확정한 뒤 본인 주차 확인
+| **[`function.md`](function.md)** | 누가 어떤 기능을 만들고, 어떤 자료조사를 할지 |  본인 할 일 확인 |
+| **[`PLAN.md`](PLAN.md)** | 시스템 설계, 화면 구성, DB 구조, 기능별 상세 명세 | 구현하다 막힐 때 참조 |
+| **[`RESEARCH.md`](RESEARCH.md)** | 왜 이 기능을 만드는지 배경 조사 | 처음에 프로젝트 이해할 때 |
+| **[`TODO.md`](TODO.md)** | 6주 일정 초안 + 주차별 할 일 | 회의에서 확정한 뒤 활용 |
+| **[`/research`](RESEARCH.md)** | 자료조사 내용 | 자료조사 |
 
 ---
 
@@ -44,17 +45,18 @@ http://43.200.191.1:5173/
 
 ## 기술 스택
 
-| 분야 | 기술 |
-|---|---|
-| 프론트엔드 | React + TypeScript |
-| 백엔드 | Node.js (Express) |
-| 데이터베이스 | AWS RDS |
-| 배포 | AWS S3 or EC2 (프론트) + EC2 (백엔드) |
-| 외부 API | OpenAi API (챗봇) / Naver Clova OCR|
+| 분야 | 기술 | 링크 |
+|---|---|--- |
+| 프론트엔드 | ![React](https://img.shields.io/badge/React-19-skyblue?logo=React) ![TypeScript](https://img.shields.io/badge/TypeScript-6.0.3-blue?logo=typescript) | [client](./client/README.md)|
+| 백엔드 | ![Node.js](https://img.shields.io/badge/Node.js-22-green?logo=Node.js) ![Express](https://img.shields.io/badge/Express-green) | [server](./server/README.md) |
+| 데이터베이스 |![AWS RDS](https://img.shields.io/badge/AWSRDS-003B57?logo=postgresql)  | - |
+| 스토리지 | AWS S3 | - |
+| 배포 | EC2 (프론트) + EC2 (백엔드) | - |
+| 외부 API | OpenAi API / Naver Clova OCR| - |
 
 ---
 
 ## 참고
-email/pw
-test@test.com/test1234@@
+login email/pw  
+test@test.com/test1234@@  
 rlaxogus03@gmail.com/test1234@@@

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>petManagement — DB ERD (main 브랜치 마이그레이션 기준)</title>
+<style>
+  :root {
+    --border: #d8dde3;
+    --bg-soft: #f7f9fb;
+    --accent: #3a6ea5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    margin: 0;
+    padding: 2rem;
+    line-height: 1.6;
+    color: #1f2937;
+    background: #fff;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.15rem; margin-top: 2.5rem; border-left: 4px solid var(--accent); padding-left: 0.6rem; }
+  .subtitle { color: #6b7280; margin-top: 0; margin-bottom: 1.5rem; font-size: 0.92rem; }
+  .note {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.88rem;
+    margin: 0.8rem 0 1.4rem;
+  }
+  .note ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+  .note li { margin-bottom: 0.25rem; }
+  .erd-diagram {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    overflow-x: auto;
+  }
+  .erd-diagram svg { display: block; max-width: 100%; height: auto; }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    font-size: 0.82rem;
+    color: #4b5563;
+    margin: 0.6rem 0 1rem;
+  }
+  .legend span.swatch {
+    display: inline-block;
+    width: 1.8rem;
+    border-top: 1.4px solid #8a7fb8;
+    vertical-align: middle;
+    margin-right: 0.35rem;
+  }
+  .legend span.dashed { border-top-style: dashed; }
+  .legend code.pk { color: #b45309; }
+  .legend code.fk { color: #1d4ed8; }
+  .legend code.uk { color: #047857; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.85rem;
+    margin-top: 0.6rem;
+  }
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--accent);
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--bg-soft); font-weight: 600; }
+  code { background: #eef2f6; padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.85em; }
+  .pk { color: #b45309; font-weight: 600; }
+  .fk { color: #1d4ed8; font-weight: 600; }
+  .tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 1.4rem;
+  }
+  footer { margin-top: 3rem; font-size: 0.8rem; color: #9ca3af; }
+</style>
+</head>
+<body>
+
+<h2>ER 다이어그램</h2>
+<p class="legend">
+  <span><span class="swatch"></span>관계마다 선 색을 다르게 표시 — 시작점(●, FK 쪽)·끝점(○, PK 쪽)이 해당 컬럼 행(row)에 정확히 고정됨</span>
+  <span><span class="swatch dashed"></span>점선 = nullable FK (예: notification_log.vaccination_record_id)</span>
+  <span>● = FK(N)쪽, ○ = PK(1)쪽 — 같은 색 선을 따라가면 어떤 컬럼이 어떤 컬럼을 참조하는지 추적 가능</span>
+  <span><code class="pk">PK</code> 기본키 · <code class="fk">FK</code> 외래키 · <code class="uk">UK</code> 유니크</span>
+</p>
+<div class="erd-diagram">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1570 916" width="100%" font-family="Menlo, Consolas, 'SFMono-Regular', monospace" font-size="12">
+<rect x="0" y="0" width="1570" height="916" fill="#ffffff"/>
+<line x1="1185.0" y1="25.0" x2="1185.0" y2="891.0" stroke="#d8dde3" stroke-width="1.5" stroke-dasharray="6,5"/>
+<text x="1199.0" y="39.0" font-size="11" fill="#9ca3af">← 허브(pets/users) 관계 테이블 &nbsp;|&nbsp; 독립/마스터 테이블 (FK 없음) →</text>
+<defs>
+<g id="erd-one-0"><circle r="3.6" fill="#ffffff" stroke="#7c3aed" stroke-width="1.7"/></g>
+<g id="erd-many-0"><circle r="3" fill="#7c3aed"/></g>
+<g id="erd-one-1"><circle r="3.6" fill="#ffffff" stroke="#0891b2" stroke-width="1.7"/></g>
+<g id="erd-many-1"><circle r="3" fill="#0891b2"/></g>
+<g id="erd-one-2"><circle r="3.6" fill="#ffffff" stroke="#db2777" stroke-width="1.7"/></g>
+<g id="erd-many-2"><circle r="3" fill="#db2777"/></g>
+<g id="erd-one-3"><circle r="3.6" fill="#ffffff" stroke="#ea580c" stroke-width="1.7"/></g>
+<g id="erd-many-3"><circle r="3" fill="#ea580c"/></g>
+<g id="erd-one-4"><circle r="3.6" fill="#ffffff" stroke="#2563eb" stroke-width="1.7"/></g>
+<g id="erd-many-4"><circle r="3" fill="#2563eb"/></g>
+<g id="erd-one-5"><circle r="3.6" fill="#ffffff" stroke="#16a34a" stroke-width="1.7"/></g>
+<g id="erd-many-5"><circle r="3" fill="#16a34a"/></g>
+<g id="erd-one-6"><circle r="3.6" fill="#ffffff" stroke="#9333ea" stroke-width="1.7"/></g>
+<g id="erd-many-6"><circle r="3" fill="#9333ea"/></g>
+<g id="erd-one-7"><circle r="3.6" fill="#ffffff" stroke="#0d9488" stroke-width="1.7"/></g>
+<g id="erd-many-7"><circle r="3" fill="#0d9488"/></g>
+<g id="erd-one-8"><circle r="3.6" fill="#ffffff" stroke="#c026d3" stroke-width="1.7"/></g>
+<g id="erd-many-8"><circle r="3" fill="#c026d3"/></g>
+<g id="erd-one-9"><circle r="3.6" fill="#ffffff" stroke="#65a30d" stroke-width="1.7"/></g>
+<g id="erd-many-9"><circle r="3" fill="#65a30d"/></g>
+<g id="erd-one-10"><circle r="3.6" fill="#ffffff" stroke="#dc2626" stroke-width="1.7"/></g>
+<g id="erd-many-10"><circle r="3" fill="#dc2626"/></g>
+<g id="erd-one-11"><circle r="3.6" fill="#ffffff" stroke="#4f46e5" stroke-width="1.7"/></g>
+<g id="erd-many-11"><circle r="3" fill="#4f46e5"/></g>
+</defs>
+<g id="relationships">
+<path d="M 450.0 434.0 C 395.4 434.0, 374.6 92.0, 320.0 92.0" fill="none" stroke="#7c3aed" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-0" x="450.0" y="434.0"/>
+<use href="#erd-one-0" x="320.0" y="92.0"/>
+<path d="M 450.0 112.0 C 395.4 112.0, 374.6 92.0, 320.0 92.0" fill="none" stroke="#0891b2" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-1" x="450.0" y="112.0"/>
+<use href="#erd-one-1" x="320.0" y="92.0"/>
+<path d="M 720.0 132.0 C 756.0 132.0, 756.0 414.0, 720.0 414.0" fill="none" stroke="#db2777" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-2" x="720.0" y="132.0"/>
+<use href="#erd-one-2" x="720.0" y="414.0"/>
+<path d="M 320.0 756.0 C 356.0 756.0, 356.0 92.0, 320.0 92.0" fill="none" stroke="#ea580c" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-3" x="320.0" y="756.0"/>
+<use href="#erd-one-3" x="320.0" y="92.0"/>
+<path d="M 320.0 776.0 C 374.6 776.0, 395.4 414.0, 450.0 414.0" fill="none" stroke="#2563eb" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-4" x="320.0" y="776.0"/>
+<use href="#erd-one-4" x="450.0" y="414.0"/>
+<path d="M 320.0 796.0 C 450.0 796.0, 720.0 414.0, 850.0 414.0" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.8"/>
+<use href="#erd-many-5" x="320.0" y="796.0"/>
+<use href="#erd-one-5" x="850.0" y="414.0"/>
+<path d="M 320.0 434.0 C 374.6 434.0, 395.4 414.0, 450.0 414.0" fill="none" stroke="#9333ea" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-6" x="320.0" y="434.0"/>
+<use href="#erd-one-6" x="450.0" y="414.0"/>
+<path d="M 850.0 434.0 C 795.4 434.0, 774.6 414.0, 720.0 414.0" fill="none" stroke="#0d9488" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-7" x="850.0" y="434.0"/>
+<use href="#erd-one-7" x="720.0" y="414.0"/>
+<path d="M 1120.0 454.0 C 1156.0 454.0, 1156.0 92.0, 1120.0 92.0" fill="none" stroke="#c026d3" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-8" x="1120.0" y="454.0"/>
+<use href="#erd-one-8" x="1120.0" y="92.0"/>
+<path d="M 720.0 756.0 C 756.0 756.0, 756.0 414.0, 720.0 414.0" fill="none" stroke="#65a30d" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-9" x="720.0" y="756.0"/>
+<use href="#erd-one-9" x="720.0" y="414.0"/>
+<path d="M 850.0 756.0 C 795.4 756.0, 774.6 414.0, 720.0 414.0" fill="none" stroke="#dc2626" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-10" x="850.0" y="756.0"/>
+<use href="#erd-one-10" x="720.0" y="414.0"/>
+<path d="M 850.0 776.0 C 795.4 776.0, 774.6 736.0, 720.0 736.0" fill="none" stroke="#4f46e5" stroke-width="1.5" opacity="0.8"/>
+<use href="#erd-many-11" x="850.0" y="776.0"/>
+<use href="#erd-one-11" x="720.0" y="736.0"/>
+</g>
+<g class="erd-table">
+<rect x="50" y="50" width="270" height="112" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="50" y="50" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="50" y="76" width="270" height="6" fill="#ECECFF"/>
+<text x="185.0" y="70.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">users</text>
+<line x1="50" y1="82" x2="320" y2="82" stroke="#9370DB" stroke-width="1.3"/>
+<text x="62" y="96.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="140" y="96.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="306" y="96.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="51" y="102" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="116.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="140" y="116.0" font-size="11.5" font-weight="700" fill="#1f2937">email</text>
+<text x="306" y="116.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#047857">UK</text>
+<line x1="56" y1="102" x2="314" y2="102" stroke="#e7e3f5" stroke-width="1"/>
+<text x="62" y="136.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="140" y="136.0" font-size="11.5" font-weight="400" fill="#1f2937">pw_hash</text>
+<line x1="56" y1="122" x2="314" y2="122" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="51" y="142" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="156.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="140" y="156.0" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<line x1="56" y1="142" x2="314" y2="142" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="450" y="372" width="270" height="232" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="450" y="372" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="450" y="398" width="270" height="6" fill="#ECECFF"/>
+<text x="585.0" y="392.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">pets</text>
+<line x1="450" y1="404" x2="720" y2="404" stroke="#9370DB" stroke-width="1.3"/>
+<text x="462" y="418.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="540" y="418.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="706" y="418.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="451" y="424" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="438.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="540" y="438.0" font-size="11.5" font-weight="700" fill="#1d4ed8">user_id</text>
+<text x="706" y="438.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="456" y1="424" x2="714" y2="424" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="458.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="540" y="458.0" font-size="11.5" font-weight="400" fill="#1f2937">name</text>
+<line x1="456" y1="444" x2="714" y2="444" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="451" y="464" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="478.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="540" y="478.0" font-size="11.5" font-weight="400" fill="#1f2937">species</text>
+<line x1="456" y1="464" x2="714" y2="464" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="498.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="540" y="498.0" font-size="11.5" font-weight="400" fill="#1f2937">breed</text>
+<line x1="456" y1="484" x2="714" y2="484" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="451" y="504" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="518.0" font-size="10.5" fill="#6b7280">date</text>
+<text x="540" y="518.0" font-size="11.5" font-weight="400" fill="#1f2937">birth</text>
+<line x1="456" y1="504" x2="714" y2="504" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="538.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="540" y="538.0" font-size="11.5" font-weight="400" fill="#1f2937">gender</text>
+<line x1="456" y1="524" x2="714" y2="524" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="451" y="544" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="558.0" font-size="10.5" fill="#6b7280">boolean</text>
+<text x="540" y="558.0" font-size="11.5" font-weight="400" fill="#1f2937">neutered</text>
+<line x1="456" y1="544" x2="714" y2="544" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="578.0" font-size="10.5" fill="#6b7280">jsonb</text>
+<text x="540" y="578.0" font-size="11.5" font-weight="400" fill="#1f2937">allergies_json</text>
+<line x1="456" y1="564" x2="714" y2="564" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="451" y="584" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="598.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="540" y="598.0" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<line x1="456" y1="584" x2="714" y2="584" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="1250" y="50" width="270" height="232" rx="6" fill="#ffffff" stroke="#b08d57" stroke-width="1.3"/>
+<rect x="1250" y="50" width="270" height="32" rx="6" fill="#faf3e6" stroke="#b08d57" stroke-width="1.3"/>
+<rect x="1250" y="76" width="270" height="6" fill="#faf3e6"/>
+<text x="1385.0" y="70.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">danger_foods</text>
+<line x1="1250" y1="82" x2="1520" y2="82" stroke="#b08d57" stroke-width="1.3"/>
+<text x="1262" y="96.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="1340" y="96.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="1506" y="96.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="1251" y="102" width="268" height="20" fill="#f7f6fd"/>
+<text x="1262" y="116.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="116.0" font-size="11.5" font-weight="700" fill="#1f2937">name</text>
+<text x="1506" y="116.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#047857">UK</text>
+<line x1="1256" y1="102" x2="1514" y2="102" stroke="#e7e3f5" stroke-width="1"/>
+<text x="1262" y="136.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="136.0" font-size="11.5" font-weight="400" fill="#1f2937">name_en</text>
+<line x1="1256" y1="122" x2="1514" y2="122" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="1251" y="142" width="268" height="20" fill="#f7f6fd"/>
+<text x="1262" y="156.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="156.0" font-size="11.5" font-weight="400" fill="#1f2937">toxic_compound</text>
+<line x1="1256" y1="142" x2="1514" y2="142" stroke="#e7e3f5" stroke-width="1"/>
+<text x="1262" y="176.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="176.0" font-size="11.5" font-weight="400" fill="#1f2937">symptoms</text>
+<line x1="1256" y1="162" x2="1514" y2="162" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="1251" y="182" width="268" height="20" fill="#f7f6fd"/>
+<text x="1262" y="196.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="196.0" font-size="11.5" font-weight="400" fill="#1f2937">severity</text>
+<line x1="1256" y1="182" x2="1514" y2="182" stroke="#e7e3f5" stroke-width="1"/>
+<text x="1262" y="216.0" font-size="10.5" fill="#6b7280">numeric</text>
+<text x="1340" y="216.0" font-size="11.5" font-weight="400" fill="#1f2937">threshold_per_kg</text>
+<line x1="1256" y1="202" x2="1514" y2="202" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="1251" y="222" width="268" height="20" fill="#f7f6fd"/>
+<text x="1262" y="236.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="236.0" font-size="11.5" font-weight="400" fill="#1f2937">source_url</text>
+<line x1="1256" y1="222" x2="1514" y2="222" stroke="#e7e3f5" stroke-width="1"/>
+<text x="1262" y="256.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="256.0" font-size="11.5" font-weight="400" fill="#1f2937">aspca_ref</text>
+<line x1="1256" y1="242" x2="1514" y2="242" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="1251" y="262" width="268" height="20" fill="#f7f6fd"/>
+<text x="1262" y="276.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="1340" y="276.0" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<line x1="1256" y1="262" x2="1514" y2="262" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="50" y="372" width="270" height="192" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="50" y="372" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="50" y="398" width="270" height="6" fill="#ECECFF"/>
+<text x="185.0" y="392.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">ingredient_scans</text>
+<line x1="50" y1="404" x2="320" y2="404" stroke="#9370DB" stroke-width="1.3"/>
+<text x="62" y="418.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="140" y="418.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="306" y="418.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="51" y="424" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="438.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="140" y="438.0" font-size="11.5" font-weight="700" fill="#1d4ed8">pet_id</text>
+<text x="306" y="438.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="56" y1="424" x2="314" y2="424" stroke="#e7e3f5" stroke-width="1"/>
+<text x="62" y="458.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="140" y="458.0" font-size="11.5" font-weight="400" fill="#1f2937">image_url</text>
+<line x1="56" y1="444" x2="314" y2="444" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="51" y="464" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="478.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="140" y="478.0" font-size="11.5" font-weight="400" fill="#1f2937">extracted_text</text>
+<line x1="56" y1="464" x2="314" y2="464" stroke="#e7e3f5" stroke-width="1"/>
+<text x="62" y="498.0" font-size="10.5" fill="#6b7280">jsonb</text>
+<text x="140" y="498.0" font-size="11.5" font-weight="400" fill="#1f2937">matched_foods_json</text>
+<line x1="56" y1="484" x2="314" y2="484" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="51" y="504" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="518.0" font-size="10.5" fill="#6b7280">jsonb</text>
+<text x="140" y="518.0" font-size="11.5" font-weight="400" fill="#1f2937">matched_allergies_json</text>
+<line x1="56" y1="504" x2="314" y2="504" stroke="#e7e3f5" stroke-width="1"/>
+<text x="62" y="538.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="140" y="538.0" font-size="11.5" font-weight="400" fill="#1f2937">product_name</text>
+<line x1="56" y1="524" x2="314" y2="524" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="51" y="544" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="558.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="140" y="558.0" font-size="11.5" font-weight="400" fill="#1f2937">scanned_at</text>
+<line x1="56" y1="544" x2="314" y2="544" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="850" y="50" width="270" height="212" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="850" y="50" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="850" y="76" width="270" height="6" fill="#ECECFF"/>
+<text x="985.0" y="70.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">vaccines</text>
+<line x1="850" y1="82" x2="1120" y2="82" stroke="#9370DB" stroke-width="1.3"/>
+<text x="862" y="96.0" font-size="10.5" fill="#6b7280">serial</text>
+<text x="940" y="96.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="1106" y="96.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="851" y="102" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="116.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="940" y="116.0" font-size="11.5" font-weight="400" fill="#1f2937">species</text>
+<line x1="856" y1="102" x2="1114" y2="102" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="136.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="940" y="136.0" font-size="11.5" font-weight="400" fill="#1f2937">name</text>
+<line x1="856" y1="122" x2="1114" y2="122" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="851" y="142" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="156.0" font-size="10.5" fill="#6b7280">int</text>
+<text x="940" y="156.0" font-size="11.5" font-weight="400" fill="#1f2937">recommend_weeks</text>
+<line x1="856" y1="142" x2="1114" y2="142" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="176.0" font-size="10.5" fill="#6b7280">int</text>
+<text x="940" y="176.0" font-size="11.5" font-weight="400" fill="#1f2937">dose_total</text>
+<line x1="856" y1="162" x2="1114" y2="162" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="851" y="182" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="196.0" font-size="10.5" fill="#6b7280">int</text>
+<text x="940" y="196.0" font-size="11.5" font-weight="400" fill="#1f2937">interval_weeks</text>
+<line x1="856" y1="182" x2="1114" y2="182" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="216.0" font-size="10.5" fill="#6b7280">int</text>
+<text x="940" y="216.0" font-size="11.5" font-weight="400" fill="#1f2937">booster_weeks</text>
+<line x1="856" y1="202" x2="1114" y2="202" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="851" y="222" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="236.0" font-size="10.5" fill="#6b7280">boolean</text>
+<text x="940" y="236.0" font-size="11.5" font-weight="400" fill="#1f2937">mandatory</text>
+<line x1="856" y1="222" x2="1114" y2="222" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="256.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="940" y="256.0" font-size="11.5" font-weight="400" fill="#1f2937">severity</text>
+<line x1="856" y1="242" x2="1114" y2="242" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="850" y="372" width="270" height="212" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="850" y="372" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="850" y="398" width="270" height="6" fill="#ECECFF"/>
+<text x="985.0" y="392.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">vaccination_records</text>
+<line x1="850" y1="404" x2="1120" y2="404" stroke="#9370DB" stroke-width="1.3"/>
+<text x="862" y="418.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="940" y="418.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="1106" y="418.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="851" y="424" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="438.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="940" y="438.0" font-size="11.5" font-weight="700" fill="#1d4ed8">pet_id</text>
+<text x="1106" y="438.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="856" y1="424" x2="1114" y2="424" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="458.0" font-size="10.5" fill="#6b7280">int</text>
+<text x="940" y="458.0" font-size="11.5" font-weight="700" fill="#1d4ed8">vaccine_id</text>
+<text x="1106" y="458.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="856" y1="444" x2="1114" y2="444" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="851" y="464" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="478.0" font-size="10.5" fill="#6b7280">int</text>
+<text x="940" y="478.0" font-size="11.5" font-weight="400" fill="#1f2937">dose_no</text>
+<line x1="856" y1="464" x2="1114" y2="464" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="498.0" font-size="10.5" fill="#6b7280">date</text>
+<text x="940" y="498.0" font-size="11.5" font-weight="400" fill="#1f2937">vaccinated_at</text>
+<line x1="856" y1="484" x2="1114" y2="484" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="851" y="504" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="518.0" font-size="10.5" fill="#6b7280">date</text>
+<text x="940" y="518.0" font-size="11.5" font-weight="400" fill="#1f2937">next_due_at</text>
+<line x1="856" y1="504" x2="1114" y2="504" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="538.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="940" y="538.0" font-size="11.5" font-weight="400" fill="#1f2937">source</text>
+<line x1="856" y1="524" x2="1114" y2="524" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="851" y="544" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="558.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="940" y="558.0" font-size="11.5" font-weight="400" fill="#1f2937">memo</text>
+<line x1="856" y1="544" x2="1114" y2="544" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="578.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="940" y="578.0" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<line x1="856" y1="564" x2="1114" y2="564" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="50" y="694" width="270" height="152" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="50" y="694" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="50" y="720" width="270" height="6" fill="#ECECFF"/>
+<text x="185.0" y="714.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">notification_log</text>
+<line x1="50" y1="726" x2="320" y2="726" stroke="#9370DB" stroke-width="1.3"/>
+<text x="62" y="740.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="140" y="740.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="306" y="740.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="51" y="746" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="760.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="140" y="760.0" font-size="11.5" font-weight="700" fill="#1d4ed8">user_id</text>
+<text x="306" y="760.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="56" y1="746" x2="314" y2="746" stroke="#e7e3f5" stroke-width="1"/>
+<text x="62" y="780.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="140" y="780.0" font-size="11.5" font-weight="700" fill="#1d4ed8">pet_id</text>
+<text x="306" y="780.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="56" y1="766" x2="314" y2="766" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="51" y="786" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="800.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="140" y="800.0" font-size="11.5" font-weight="700" fill="#1d4ed8">vaccination_record_id</text>
+<text x="306" y="800.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="56" y1="786" x2="314" y2="786" stroke="#e7e3f5" stroke-width="1"/>
+<text x="62" y="820.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="140" y="820.0" font-size="11.5" font-weight="400" fill="#1f2937">notify_type</text>
+<line x1="56" y1="806" x2="314" y2="806" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="51" y="826" width="268" height="20" fill="#f7f6fd"/>
+<text x="62" y="840.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="140" y="840.0" font-size="11.5" font-weight="400" fill="#1f2937">sent_at</text>
+<line x1="56" y1="826" x2="314" y2="826" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="450" y="694" width="270" height="152" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="450" y="694" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="450" y="720" width="270" height="6" fill="#ECECFF"/>
+<text x="585.0" y="714.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">weight_records</text>
+<line x1="450" y1="726" x2="720" y2="726" stroke="#9370DB" stroke-width="1.3"/>
+<text x="462" y="740.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="540" y="740.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="706" y="740.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="451" y="746" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="760.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="540" y="760.0" font-size="11.5" font-weight="700" fill="#1d4ed8">pet_id</text>
+<text x="706" y="760.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="456" y1="746" x2="714" y2="746" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="780.0" font-size="10.5" fill="#6b7280">numeric</text>
+<text x="540" y="780.0" font-size="11.5" font-weight="400" fill="#1f2937">weight</text>
+<line x1="456" y1="766" x2="714" y2="766" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="451" y="786" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="800.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="540" y="800.0" font-size="11.5" font-weight="400" fill="#1f2937">recorded_at</text>
+<line x1="456" y1="786" x2="714" y2="786" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="820.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="540" y="820.0" font-size="11.5" font-weight="400" fill="#1f2937">memo</text>
+<line x1="456" y1="806" x2="714" y2="806" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="451" y="826" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="840.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="540" y="840.0" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<line x1="456" y1="826" x2="714" y2="826" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="850" y="694" width="270" height="172" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="850" y="694" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="850" y="720" width="270" height="6" fill="#ECECFF"/>
+<text x="985.0" y="714.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">weight_alerts</text>
+<line x1="850" y1="726" x2="1120" y2="726" stroke="#9370DB" stroke-width="1.3"/>
+<text x="862" y="740.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="940" y="740.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="1106" y="740.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="851" y="746" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="760.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="940" y="760.0" font-size="11.5" font-weight="700" fill="#1d4ed8">pet_id</text>
+<text x="1106" y="760.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="856" y1="746" x2="1114" y2="746" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="780.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="940" y="780.0" font-size="11.5" font-weight="700" fill="#1d4ed8">weight_record_id</text>
+<text x="1106" y="780.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#047857">UK</text>
+<text x="1080" y="780.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="856" y1="766" x2="1114" y2="766" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="851" y="786" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="800.0" font-size="10.5" fill="#6b7280">numeric</text>
+<text x="940" y="800.0" font-size="11.5" font-weight="400" fill="#1f2937">prev_weight</text>
+<line x1="856" y1="786" x2="1114" y2="786" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="820.0" font-size="10.5" fill="#6b7280">numeric</text>
+<text x="940" y="820.0" font-size="11.5" font-weight="400" fill="#1f2937">new_weight</text>
+<line x1="856" y1="806" x2="1114" y2="806" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="851" y="826" width="268" height="20" fill="#f7f6fd"/>
+<text x="862" y="840.0" font-size="10.5" fill="#6b7280">numeric</text>
+<text x="940" y="840.0" font-size="11.5" font-weight="400" fill="#1f2937">delta_ratio</text>
+<line x1="856" y1="826" x2="1114" y2="826" stroke="#e7e3f5" stroke-width="1"/>
+<text x="862" y="860.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="940" y="860.0" font-size="11.5" font-weight="400" fill="#1f2937">notified_at</text>
+<line x1="856" y1="846" x2="1114" y2="846" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="1250" y="372" width="270" height="172" rx="6" fill="#ffffff" stroke="#b08d57" stroke-width="1.3"/>
+<rect x="1250" y="372" width="270" height="32" rx="6" fill="#faf3e6" stroke="#b08d57" stroke-width="1.3"/>
+<rect x="1250" y="398" width="270" height="6" fill="#faf3e6"/>
+<text x="1385.0" y="392.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">standard_weights</text>
+<line x1="1250" y1="404" x2="1520" y2="404" stroke="#b08d57" stroke-width="1.3"/>
+<text x="1262" y="418.0" font-size="10.5" fill="#6b7280">serial</text>
+<text x="1340" y="418.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="1506" y="418.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="1251" y="424" width="268" height="20" fill="#f7f6fd"/>
+<text x="1262" y="438.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="438.0" font-size="11.5" font-weight="400" fill="#1f2937">species</text>
+<line x1="1256" y1="424" x2="1514" y2="424" stroke="#e7e3f5" stroke-width="1"/>
+<text x="1262" y="458.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="1340" y="458.0" font-size="11.5" font-weight="400" fill="#1f2937">breed</text>
+<line x1="1256" y1="444" x2="1514" y2="444" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="1251" y="464" width="268" height="20" fill="#f7f6fd"/>
+<text x="1262" y="478.0" font-size="10.5" fill="#6b7280">int</text>
+<text x="1340" y="478.0" font-size="11.5" font-weight="400" fill="#1f2937">age_min_months</text>
+<line x1="1256" y1="464" x2="1514" y2="464" stroke="#e7e3f5" stroke-width="1"/>
+<text x="1262" y="498.0" font-size="10.5" fill="#6b7280">int</text>
+<text x="1340" y="498.0" font-size="11.5" font-weight="400" fill="#1f2937">age_max_months</text>
+<line x1="1256" y1="484" x2="1514" y2="484" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="1251" y="504" width="268" height="20" fill="#f7f6fd"/>
+<text x="1262" y="518.0" font-size="10.5" fill="#6b7280">numeric</text>
+<text x="1340" y="518.0" font-size="11.5" font-weight="400" fill="#1f2937">min_kg</text>
+<line x1="1256" y1="504" x2="1514" y2="504" stroke="#e7e3f5" stroke-width="1"/>
+<text x="1262" y="538.0" font-size="10.5" fill="#6b7280">numeric</text>
+<text x="1340" y="538.0" font-size="11.5" font-weight="400" fill="#1f2937">max_kg</text>
+<line x1="1256" y1="524" x2="1514" y2="524" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+<g class="erd-table">
+<rect x="450" y="50" width="270" height="172" rx="6" fill="#ffffff" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="450" y="50" width="270" height="32" rx="6" fill="#ECECFF" stroke="#9370DB" stroke-width="1.3"/>
+<rect x="450" y="76" width="270" height="6" fill="#ECECFF"/>
+<text x="585.0" y="70.0" text-anchor="middle" font-weight="700" font-size="13.5" fill="#1f2937">chat_logs</text>
+<line x1="450" y1="82" x2="720" y2="82" stroke="#9370DB" stroke-width="1.3"/>
+<text x="462" y="96.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="540" y="96.0" font-size="11.5" font-weight="700" fill="#b45309">id</text>
+<text x="706" y="96.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#b45309">PK</text>
+<rect x="451" y="102" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="116.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="540" y="116.0" font-size="11.5" font-weight="700" fill="#1d4ed8">user_id</text>
+<text x="706" y="116.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="456" y1="102" x2="714" y2="102" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="136.0" font-size="10.5" fill="#6b7280">uuid</text>
+<text x="540" y="136.0" font-size="11.5" font-weight="700" fill="#1d4ed8">pet_id</text>
+<text x="706" y="136.0" font-size="9.5" font-weight="700" text-anchor="end" fill="#1d4ed8">FK</text>
+<line x1="456" y1="122" x2="714" y2="122" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="451" y="142" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="156.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="540" y="156.0" font-size="11.5" font-weight="400" fill="#1f2937">role</text>
+<line x1="456" y1="142" x2="714" y2="142" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="176.0" font-size="10.5" fill="#6b7280">text</text>
+<text x="540" y="176.0" font-size="11.5" font-weight="400" fill="#1f2937">message</text>
+<line x1="456" y1="162" x2="714" y2="162" stroke="#e7e3f5" stroke-width="1"/>
+<rect x="451" y="182" width="268" height="20" fill="#f7f6fd"/>
+<text x="462" y="196.0" font-size="10.5" fill="#6b7280">jsonb</text>
+<text x="540" y="196.0" font-size="11.5" font-weight="400" fill="#1f2937">context_snapshot_json</text>
+<line x1="456" y1="182" x2="714" y2="182" stroke="#e7e3f5" stroke-width="1"/>
+<text x="462" y="216.0" font-size="10.5" fill="#6b7280">timestamptz</text>
+<text x="540" y="216.0" font-size="11.5" font-weight="400" fill="#1f2937">created_at</text>
+<line x1="456" y1="202" x2="714" y2="202" stroke="#e7e3f5" stroke-width="1"/>
+</g>
+</svg>
+</div>
+
+</body>
+</html>
