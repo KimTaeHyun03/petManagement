@@ -5,7 +5,7 @@ import {
   type Pet,
   type WeightRecord,
   type WeightJudgement,
-} from './api'
+} from '../api'
 import './WeightPanel.css'
 
 interface Props {

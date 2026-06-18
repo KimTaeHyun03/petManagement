@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, errorMessage, type MatchedFood, type Pet, type ScanResult } from './api'
+import { api, errorMessage, type MatchedFood, type Pet, type ScanResult } from '../api'
 import './OcrPanel.css'
 
 interface Props {

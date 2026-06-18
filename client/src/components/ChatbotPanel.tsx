@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, errorMessage, type Pet } from './api'
+import { api, errorMessage, type Pet } from '../api'
 import './ChatbotPanel.css'
 
 interface Props {

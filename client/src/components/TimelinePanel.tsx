@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, errorMessage, type Pet, type TimelineEvent } from './api'
+import { api, errorMessage, type Pet, type TimelineEvent } from '../api'
 import './TimelinePanel.css'
 
 interface Props {

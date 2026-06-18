@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, errorMessage, type Vaccine, type VaccinationRecord } from './api'
+import { api, errorMessage, type Vaccine, type VaccinationRecord } from '../api'
 import './VaccinationsPanel.css'
 
 interface Props {
