@@ -13,7 +13,7 @@ import { env } from '../config/env.js';
 
 function shouldUseSsl(url: string): boolean {
   if (/sslmode=(require|verify-ca|verify-full|prefer)/i.test(url)) return true;
-  return /\.rds\.amazonaws\.com/i.test(url);
+  return /\.rds\.amazonaws\.com|\.supabase\.(com|co)/i.test(url);
 }
 
 // connection string의 sslmode 쿼리를 제거 — ssl 옵션이 라이브러리 해석을 덮도록.

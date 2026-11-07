@@ -23,6 +23,14 @@ export const env = {
   // 운영에서 실수로 켜지지 않도록 prod에서는 무조건 false로 강제.
   skipPwnedCheck: !isProd && process.env.SKIP_PWNED_CHECK === 'true',
 
+  // 알림 수동/외부 트리거(Cloud Scheduler 등) 인증용 비밀값.
+  // 운영(prod)에서 미설정이면 /api/admin/notify-check 는 거부된다.
+  cronSecret: process.env.CRON_SECRET ?? '',
+  // true면 서버 내장 스케줄러(node-cron)를 켜지 않는다 (Cloud Run처럼 인스턴스가 꺼질 수 있는 환경).
+  disableScheduler: process.env.DISABLE_SCHEDULER === 'true',
+  // 빌드된 프론트엔드 정적 파일 위치 (없으면 정적 서빙을 건너뜀)
+  staticDir: process.env.STATIC_DIR ?? 'public',
+
   // 이메일 알림 (SMTP) — 미설정 시 알림 발송 생략
   smtpHost: process.env.SMTP_HOST ?? '',
   smtpPort: Number(process.env.SMTP_PORT ?? 587),

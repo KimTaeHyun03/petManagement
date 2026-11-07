@@ -1,0 +1,16 @@
+# Cloud Run 소스 배포 시 업로드에서 제외 (이미지 빌드에 불필요하거나 민감한 파일)
+.git
+.claude
+node_modules
+**/node_modules
+**/dist
+.env
+.env.*
+!.env.example
+/presentation/
+/research/
+/screenshot.gif
+/erd.png
+/erd.html
+/*.md
+/docs/

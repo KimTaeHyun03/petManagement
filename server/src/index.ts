@@ -6,5 +6,5 @@ const app = createApp();
 
 app.listen(env.port, () => {
   console.log(`server on :${env.port}`);
-  startScheduler();
+  if (!env.disableScheduler) startScheduler();
 });

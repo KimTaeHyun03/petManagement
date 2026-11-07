@@ -1,6 +1,7 @@
-import FormData from 'form-data';
-import fetch from 'node-fetch';
 import { env } from '../../config/env.js';
+
+// CLOVA 응답을 기다리는 최대 시간. 응답이 없을 때 요청이 무한정 걸려 있지 않도록 한다.
+const CLOVA_TIMEOUT_MS = 30_000;
 
 export type DocType = 'ingredient' | 'receipt' | 'unknown';
 
@@ -31,20 +32,22 @@ export async function callClova(
     ],
   });
 
+  // Node 내장 fetch / FormData / Blob 사용 (node-fetch + form-data 조합은 요청이 멈추는 문제가 있었다).
+  // Content-Type(boundary 포함)은 내장 fetch가 자동으로 설정한다.
   const form = new FormData();
-  form.append('message', message, { contentType: 'application/json' });
-  form.append('file', imageBuffer, {
-    filename: originalName,
-    contentType: mimetype,
-  });
+  // message는 파일이 아니라 일반 텍스트 필드로 보내야 한다 (Blob으로 보내면 filename이 붙어 CLOVA가 거부).
+  form.append('message', message);
+  form.append(
+    'file',
+    new Blob([new Uint8Array(imageBuffer)], { type: mimetype }),
+    originalName,
+  );
 
   const response = await fetch(env.clovaOcrInvokeUrl, {
     method: 'POST',
-    headers: {
-      'X-OCR-SECRET': env.clovaOcrSecret,
-      ...form.getHeaders(),
-    },
+    headers: { 'X-OCR-SECRET': env.clovaOcrSecret },
     body: form,
+    signal: AbortSignal.timeout(CLOVA_TIMEOUT_MS),
   });
 
   if (!response.ok) {
@@ -112,8 +115,8 @@ function mimetypeToFormat(mimetype: string): string {
 }
 
 interface ClovaOcrResponse {
-  images: Array<{
-    fields: Array<{ inferText: string; lineBreak?: boolean }>;
+  images?: Array<{
+    fields?: Array<{ inferText: string; lineBreak?: boolean }>;
   }>;
 }
 
@@ -121,8 +124,9 @@ interface ClovaOcrResponse {
 // 이걸 이용해 같은 줄은 공백, 줄 끝은 \n 으로 합쳐서 레이아웃을 부분 보존한다.
 // (예: 패키지 상단의 제품명이 첫 줄로 분리됨 → 타임라인에서 제품명 추출 가능)
 function extractText(data: ClovaOcrResponse): string {
-  return data.images
-    .flatMap((img) => img.fields)
+  // 글자가 없는 이미지는 fields가 비어 있거나 없을 수 있다 → 빈 문자열로 처리
+  return (data.images ?? [])
+    .flatMap((img) => img.fields ?? [])
     .reduce((acc, f, i, arr) => {
       const sep = f.lineBreak || i === arr.length - 1 ? '\n' : ' ';
       return acc + f.inferText + sep;
