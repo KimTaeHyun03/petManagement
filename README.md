@@ -11,19 +11,44 @@
 
 ## Screenshot
 
-![화면](screenshot.gif)
+<table>
+  <tr>
+    <th width="50%">성분표 OCR 분석</th>
+    <th width="50%">예방접종 관리</th>
+  </tr>
+  <tr>
+    <td><img src="docs/images/ocr.gif" alt="성분표 OCR 분석"></td>
+    <td><img src="docs/images/vaccination.png" alt="예방접종 관리"></td>
+  </tr>
+  <tr>
+    <th>체중 관리</th>
+    <th>챗봇 상담</th>
+  </tr>
+  <tr>
+    <td><img src="docs/images/weight.png" alt="체중 관리"></td>
+    <td><img src="docs/images/chatbot.png" alt="챗봇 상담"></td>
+  </tr>
+  <tr>
+    <th colspan="2">통합 타임라인</th>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="docs/images/timeline.png" alt="통합 타임라인" width="45%"></td>
+  </tr>
+</table>
 
 * * *
 
 ## 접속
 
-**[PawCare](http://43.200.191.1:5173/)**
+**[PawCare](https://pawcare-178680260852.us-west1.run.app/)**
 
 ```
-http://43.200.191.1:5173/
+https://pawcare-178680260852.us-west1.run.app/
 ```
 
 회원가입 후 반려동물을 등록하면 모든 기능을 사용할 수 있습니다.
+
+> 서버가 유휴 상태일 때는 꺼져 있다가 첫 요청에 켜지므로, 첫 접속은 몇 초 걸릴 수 있습니다.
 
 * * *
 
@@ -47,11 +72,11 @@ http://43.200.191.1:5173/
 
 | 영역 | 내용 |
 |---|---|
-| 회원·반려동물 | 이메일 가입/로그인(httpOnly 쿠키 인증), 한 계정에서 여러 마리 등록·전환, 프로필 사진 업로드 |
+| 회원·반려동물 | 이메일 가입/로그인(httpOnly 쿠키 인증), 한 계정에서 여러 마리 등록·전환, 프로필 사진 업로드(S3 설정 시) |
 | OCR 자동 기록 | 영수증/성분표 사진 업로드 → 문서 자동 분류 → 사용자 확인 후 저장 |
 | 성분표 분석 | 위험 음식 DB(ASPCA 기준) 매칭 + 반려동물 알러지 매칭 → 화면 즉시 경고 |
 | 체중 관리 | 체중 기록·그래프, 직전 대비 ±10% 이상 변동 시 급변 판정 |
-| 예방접종 | 백신 마스터 기반 이력 관리, 다음 접종일 계산, D-7 · D-1 · D-day 이메일 알림 |
+| 예방접종 | 백신 마스터 기반 이력 관리, 다음 접종일 계산, D-7 · D-1 · D-day 이메일 알림(SMTP 설정 시) |
 | 통합 타임라인 | 체중·접종·성분표 스캔을 시간순 한 화면으로 결합 |
 | 챗봇 | OpenAI + 펫 단위 DB 컨텍스트(프로필·체중 추이·접종·스캔)로 맞춤 답변, 진단·처방은 하지 않음 |
 
@@ -78,10 +103,9 @@ http://43.200.191.1:5173/
 |---|---|
 | 프론트엔드 | ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white) ![React Router](https://img.shields.io/badge/React_Router-7-CA4245?logo=reactrouter&logoColor=white) |
 | 백엔드 | ![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white) ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white) ![Zod](https://img.shields.io/badge/Zod-3-3E67B1?logoColor=white) |
-| 데이터베이스 | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-AWS_RDS-4169E1?logo=postgresql&logoColor=white) |
-| 스토리지 | ![AWS S3](https://img.shields.io/badge/AWS_S3-569A31?logo=amazons3&logoColor=white) |
+| 데이터베이스 | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3FCF8E?logo=supabase&logoColor=white) |
 | 외부 API | ![OpenAI](https://img.shields.io/badge/OpenAI-gpt--4o--mini-412991?logo=openai&logoColor=white) ![Naver CLOVA OCR](https://img.shields.io/badge/Naver_CLOVA-OCR-03C75A?logo=naver&logoColor=white) |
-| 배포 | ![AWS EC2](https://img.shields.io/badge/AWS_EC2-프론트·백엔드-FF9900?logo=amazonec2&logoColor=white) |
+| 배포 | ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white) ![Google Cloud Run](https://img.shields.io/badge/Cloud_Run-4285F4?logo=googlecloud&logoColor=white) |
 
 * * *
 
@@ -92,7 +116,7 @@ http://43.200.191.1:5173/
 | 김태현 | 총괄 | 회원가입/로그인, 반려동물 등록, 챗봇 |
 | 김기연 | 개발 | 체중 관리, 통합 타임라인·대시보드 |
 | 장윤서 | 개발 | OCR 변환, 위험 음식·알러지 매칭 |
-| 김찬영 | 개발 | 예방접종 관리, DB(RDS)·배포 환경 |
+| 김찬영 | 개발 | 예방접종 관리, DB·배포 환경 |
 
 * * *
 
@@ -120,8 +144,10 @@ petManagement/
 │  ├─ migrations/          # PostgreSQL 스키마·시드 SQL
 │  └─ src/modules/         # auth · pets · weights · vaccinations · ocr
 │                          # ingredient-scans · timeline · chatbot · notifications
+├─ docs/images/            # README 스크린샷
 ├─ research/               # 팀원별 자료조사
 ├─ presentation/           # 발표 자료
+├─ Dockerfile              # 프론트+백엔드 단일 컨테이너 빌드
 ├─ PLAN.md  RESEARCH.md  function.md  workflow.md
 └─ erd.png                 # ERD
 ```
@@ -148,3 +174,17 @@ npm run dev              # http://localhost:5173
 선택 값: `SMTP_*`(이메일 알림), `AWS_REGION` · `AWS_S3_BUCKET`(프로필 사진 업로드)
 
 > 시크릿 키는 저장소에 올리지 않습니다. `.env`는 `.gitignore`에 포함되어 있습니다.
+
+### 배포 (Google Cloud Run, 단일 컨테이너)
+
+프론트엔드를 빌드해 Express가 함께 서빙하므로 컨테이너 하나로 배포합니다. 쿠키 인증과 CORS를 같은 출처에서 처리할 수 있습니다.
+
+```bash
+gcloud run deploy pawcare --source . --region us-west1 \
+  --memory 512Mi --min-instances 0 --max-instances 1 \
+  --set-env-vars NODE_ENV=production,DISABLE_SCHEDULER=true \
+  --set-secrets DATABASE_URL=<시크릿>:latest,JWT_ACCESS_SECRET=<시크릿>:latest,...
+```
+
+- DB 접속 정보와 API 키는 Secret Manager로 주입합니다.
+- 서버가 꺼질 수 있는 환경이라 내장 스케줄러는 끄고(`DISABLE_SCHEDULER=true`), 알림은 `POST /api/admin/notify-check`를 `CRON_SECRET`으로 호출해 실행합니다.
